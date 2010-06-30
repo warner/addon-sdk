@@ -203,6 +203,13 @@ def get_deps_for_targets(pkg_cfg, targets):
 
     return visited
 
+def get_modules_for_targets(target, deps, pkg_cfg):
+    pass
+
+# "dep" means a package
+# "section" means package/lib or package/tests or package/data
+# target is the top-level package name
+
 def generate_build_for_target(pkg_cfg, target, deps, prefix='',
                               include_tests=True,
                               include_dep_tests=False,
@@ -210,6 +217,10 @@ def generate_build_for_target(pkg_cfg, target, deps, prefix='',
     validate_resource_hostname(prefix)
 
     manifest = []
+    # returns a description of how to build the XPI. It lists packages, but
+    # not individual modules.
+    #  build.loader is a resource: URL
+    #  much of this information will be written into harness-options.json
     build = Bunch(resources=Bunch(),
                   resourcePackages=Bunch(),
                   packageData=Bunch(),
@@ -227,9 +238,9 @@ def generate_build_for_target(pkg_cfg, target, deps, prefix='',
                 # configuration dict.
                 dirnames = [dirnames]
             for dirname in resolve_dirs(cfg, dirnames):
-                name = "-".join([prefix + cfg.name,
+                name = "-".join([prefix + cfg.name, # prefix is JID..
                                  os.path.basename(dirname)])
-                validate_resource_hostname(name)
+                validate_resource_hostname(name) # name is a zipfile name
                 if name in build.resources:
                     raise KeyError('resource already defined', name)
                 build.resourcePackages[name] = cfg.name
@@ -249,7 +260,7 @@ def generate_build_for_target(pkg_cfg, target, deps, prefix='',
                     manifest.extend(pkg_manifest)
 
 
-    def add_dep_to_build(dep):
+    def add_dep_to_build(dep): # dep is a package name
         dep_cfg = pkg_cfg.packages[dep]
         add_section_to_build(dep_cfg, "lib", is_code=True)
         add_section_to_build(dep_cfg, "data", is_data=True)
@@ -264,10 +275,10 @@ def generate_build_for_target(pkg_cfg, target, deps, prefix='',
         add_section_to_build(target_cfg, "tests", is_code=True)
 
     for dep in deps:
-        add_dep_to_build(dep)
+        add_dep_to_build(dep) # this adds all the code
 
-    if 'loader' not in build:
-        add_dep_to_build(DEFAULT_LOADER)
+    if 'loader' not in build: # if no other packages set .loader yet
+        add_dep_to_build(DEFAULT_LOADER) # == "jetpack-core"
 
     return build
 

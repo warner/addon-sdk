@@ -424,6 +424,23 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
     if not pkg_cfg:
         pkg_cfg = packaging.build_config(env_root, target_cfg)
 
+    # pkg_cfg contains package info, but no module info
+    # pkg_cfg has one key: "packages"
+    # pkg_cfg.packages has one key per package: jetpack-core, test-harness, etc
+    # pkg_cfg.packages["jetpack-core"] has keys:
+    #  name="jetpack-core", root_dir=str(absdir),
+    #  loader="lib/cuddlefish.js", lib=["lib"], tests=["tests"], data="data",
+    #  author=str, contributors=list(str), description=str,
+    #  keywords=list(str), license=str, version=str
+    # the lib/tests/data keys map types to subdirnames: you could put
+    # "lib" stuff in PKGDIR/lib1/ and PKGDIR/lib2/ instead of always in
+    # PKGDIR/lib/ .
+
+    from pprint import pprint
+    pprint(("target_cfg:", target_cfg.items()))
+    pprint(("pkg_cfg:", pkg_cfg.packages["jetpack-core"]))
+    print "1:", pkg_cfg.packages["jetpack-core"].keys()
+    #print "main2:", pkg_cfg.packages
     target = target_cfg.name
 
     # TODO: Consider keeping a cache of dynamic UUIDs, based
@@ -481,6 +498,7 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
         targets.extend(options.extra_packages.split(","))
 
     deps = packaging.get_deps_for_targets(pkg_cfg, targets)
+    #NEWmodules = packaging.get_modules_for_targets(target_cfg.main, deps, pkg_cfg)
     build = packaging.generate_build_for_target(
         pkg_cfg, target, deps,
         prefix=unique_prefix,  # used to create resource: URLs
