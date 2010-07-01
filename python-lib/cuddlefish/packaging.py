@@ -191,6 +191,7 @@ def get_deps_for_targets(pkg_cfg, targets):
     visited = []
     deps_left = [[dep, None] for dep in list(targets)]
 
+    loader = None
     while deps_left:
         [dep, required_by] = deps_left.pop()
         if dep not in visited:
@@ -202,34 +203,12 @@ def get_deps_for_targets(pkg_cfg, targets):
                 raise PackageNotFoundError(dep, required_reason)
             dep_cfg = pkg_cfg.packages[dep]
             deps_left.extend([[i, dep] for i in dep_cfg.get('dependencies', [])])
+            if "loader" in dep_cfg:
+                loader = dep_cfg,dep_cfg.loader
+    if not loader and DEFAULT_LOADER not in visited:
+        visited.append(DEFAULT_LOADER)
 
     return visited
-
-class Manifest:
-    def __init__(self, pkg_cfg, deps):
-        self.manifest = {}
-        # keys are incrementing numbers
-        # values are ( JSfilename, H(JSfile), MDfilename, H(MDfile),
-        #              {reqname: manifestkey, ..}, chromep )
-        self.pkg_cfg = pkg_cfg
-        self.deps = deps
-
-    def find_module(self, package, name):
-        for libdir in package.lib:
-            n = os.path.join(package.root_dir, libdir, name+".js")
-            if os.path.exists(n):
-                return n
-        raise KeyError("unable to find module '%s' in package '%s'" %
-                       (main, target_cfg.name))
-
-    def build(self, target_cfg, main):
-        JSfilename = self.find_module(target_cfg, main)
-        print JSfilename
-        HJS = sha256(open(JSfilename,"rb").read()).hexdigest()
-        MDfilename = os.path.join(target_cfg.name, "README.md")
-        HMD = sha256(open(MDfilename,"rb").read()).hexdigest()
-
-        return self.manifest
 
 
 # "dep" means a package

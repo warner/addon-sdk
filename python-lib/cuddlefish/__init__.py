@@ -500,9 +500,16 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
         targets.extend(options.extra_packages.split(","))
 
     deps = packaging.get_deps_for_targets(pkg_cfg, targets)
-    #NEWmodules = packaging.get_modules_for_targets(target_cfg.main, deps, pkg_cfg)
-
-    manifest2 = packaging.Manifest(pkg_cfg, deps).build(target_cfg, target_cfg.main)
+    from manifest import ManifestXPIThingy
+    print "DEPS", deps
+    manifest2 = ManifestXPIThingy().build(pkg_cfg, deps, target_cfg)
+    print
+    for i,mi in enumerate(manifest2):
+        (js,hjs,docs,hdocs,reqs,chromep) = mi
+        print "%d: %15s [%s]   %15s [%s]   %s%s" % (i, docs,hdocs[:6], js,hjs[:6], 
+                                            reqs,{True:"+chrome",
+                                                  False:""}[chromep])
+    return
 
     build = packaging.generate_build_for_target(
         pkg_cfg, target, deps,
