@@ -441,7 +441,9 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
     pprint(("pkg_cfg:", pkg_cfg.packages["jetpack-core"]))
     print "1:", pkg_cfg.packages["jetpack-core"].keys()
     #print "main2:", pkg_cfg.packages
+
     target = target_cfg.name
+    print "2:", target_cfg.main
 
     # TODO: Consider keeping a cache of dynamic UUIDs, based
     # on absolute filesystem pathname, in the root directory
@@ -499,6 +501,9 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
 
     deps = packaging.get_deps_for_targets(pkg_cfg, targets)
     #NEWmodules = packaging.get_modules_for_targets(target_cfg.main, deps, pkg_cfg)
+
+    manifest2 = packaging.Manifest(pkg_cfg, deps).build(target_cfg, target_cfg.main)
+
     build = packaging.generate_build_for_target(
         pkg_cfg, target, deps,
         prefix=unique_prefix,  # used to create resource: URLs

@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+from hashlib import sha256
 
 import simplejson as json
 from cuddlefish.bunch import Bunch
@@ -185,6 +186,7 @@ def build_config(root_dir, target_cfg):
 
     return Bunch(packages=packages)
 
+
 def get_deps_for_targets(pkg_cfg, targets):
     visited = []
     deps_left = [[dep, None] for dep in list(targets)]
@@ -203,8 +205,32 @@ def get_deps_for_targets(pkg_cfg, targets):
 
     return visited
 
-def get_modules_for_targets(target, deps, pkg_cfg):
-    pass
+class Manifest:
+    def __init__(self, pkg_cfg, deps):
+        self.manifest = {}
+        # keys are incrementing numbers
+        # values are ( JSfilename, H(JSfile), MDfilename, H(MDfile),
+        #              {reqname: manifestkey, ..}, chromep )
+        self.pkg_cfg = pkg_cfg
+        self.deps = deps
+
+    def find_module(self, package, name):
+        for libdir in package.lib:
+            n = os.path.join(package.root_dir, libdir, name+".js")
+            if os.path.exists(n):
+                return n
+        raise KeyError("unable to find module '%s' in package '%s'" %
+                       (main, target_cfg.name))
+
+    def build(self, target_cfg, main):
+        JSfilename = self.find_module(target_cfg, main)
+        print JSfilename
+        HJS = sha256(open(JSfilename,"rb").read()).hexdigest()
+        MDfilename = os.path.join(target_cfg.name, "README.md")
+        HMD = sha256(open(MDfilename,"rb").read()).hexdigest()
+
+        return self.manifest
+
 
 # "dep" means a package
 # "section" means package/lib or package/tests or package/data
