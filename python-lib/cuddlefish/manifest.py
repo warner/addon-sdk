@@ -20,7 +20,7 @@ def scan_requirements_with_grep(fn, lines):
             mo = re.search(REQUIRE_RE, clause)
             if mo:
                 modname = mo.group(1)
-                requires.add(mo.group(1))
+                requires.add(modname)
     return requires
 
 MUST_ASK_FOR_CHROME =  """\
@@ -110,9 +110,11 @@ def scan_package(pkg_name, dirname, stderr=sys.stderr):
 
 import zipfile
 import simplejson as json
+import preflight
+import ecdsa
 
 class ManifestXPIThingy:
-    def build(self, pkg_cfg, packages, target_cfg, stderr=sys.stderr):
+    def build(self, pkg_cfg, packages, target_cfg, keydir, stderr=sys.stderr):
         self.manifest = []
         # keys are incrementing numbers
         # values are ( JSfilename, H(JSfile), MDfilename, H(MDfile),
@@ -137,7 +139,15 @@ class ManifestXPIThingy:
             os.unlink(tempname)
         zf = zipfile.ZipFile("out.xpi", "w", zipfile.ZIP_DEFLATED)
         add_data(zf, "loader", "fake loader\n")
-        add_data(zf, "manifest.json", json.dumps(self.manifest).encode("utf-8"))
+        manifest_json = json.dumps(self.manifest).encode("utf-8")
+        add_data(zf, "manifest.json", manifest_json)
+        jid = target_cfg["id"]
+        sk = preflight.check_for_privkey(keydir, jid, self.stderr)
+        sig = preflight.my_b32encode(sk.sign(manifest_json))
+        vk = preflight.my_b32encode(sk.get_verifying_key().to_string())
+        sig_data = json.dumps( (jid, vk, sig) ).encode("utf-8")
+        add_data(zf, "manifest.sig.json", sig_data)
+
         for i,m in enumerate(self.manifest):
             js,doc = self.files[i]
             (js_zipname, js_hash, docs_zipname, docs_hash, reqnums, chrome) = m
@@ -206,7 +216,7 @@ class ManifestXPIThingy:
             if os.path.exists(n):
                 return n
         raise KeyError("unable to find module '%s' in package '%s'" %
-                       (main, target_cfg.name))
+                       (name, package.name))
 
     def find_docs(self, package, name):
         n = os.path.join(package.root_dir, "docs", name+".md")
@@ -219,6 +229,43 @@ class ManifestXPIThingy:
         if os.path.exists(n):
             return n
         return None
+
+
+def dump_manifest(manifest_file):
+    zf = zipfile.ZipFile(open(manifest_file, "rb"))
+    #for zi in zf.infolist():
+    #    print zi.filename
+
+    print "checking manifest signature.."
+    manifest_data = zf.open("manifest.json").read()
+    sig_data = zf.open("manifest.sig.json").read()
+    (jid, vk_b32, sig_s) = json.loads(sig_data.decode("utf-8"))
+    vk = ecdsa.VerifyingKey.from_string(preflight.my_b32decode(vk_b32),
+                                        curve=ecdsa.NIST256p)
+    sig = preflight.my_b32decode(sig_s)
+    vk.verify(sig, manifest_data)
+    manifest = json.loads(manifest_data.decode("utf-8"))
+
+
+    print "checking hashes.."
+    for i,mi in enumerate(manifest):
+        (js,hjs,docs,hdocs,reqs,chromep) = mi
+        hjs2 = sha256(zf.open(js).read()).hexdigest()
+        if hjs2 != hjs:
+            print "BADHASH", js, hjs, hjs2
+        if docs:
+            hdocs2 = sha256(zf.open(docs).read()).hexdigest()
+            if hdocs2 != hdocs:
+                print "BADHASH", docs, hdocs, hdocs2
+
+    print "MANIFEST:"
+    length = max([len(mi[0]) for mi in manifest])
+    fmtstring = "%%d:  %%%ds [%%s]   %%%ds [%%s]   %%s%%s" % (length, length)
+    for i,mi in enumerate(manifest):
+        (js,hjs,docs,hdocs,reqs,chromep) = mi
+        reqstring = "{%s}" % (", ".join(["%s=%d" % (x,reqs[x]) for x in reqs]))
+        print fmtstring % (i, js,hjs[:4],  docs,hdocs[:4], reqstring,
+                           {True:"+chrome", False:""}[chromep])
 
 if __name__ == '__main__':
     for fn in sys.argv[1:]:

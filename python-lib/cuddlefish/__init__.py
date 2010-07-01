@@ -357,6 +357,10 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
         cuddlefish.server.generate_static_docs(env_root, filename)
         print "Wrote %s." % filename
         return
+    elif command == "dump-manifest":
+        import cuddlefish.manifest
+        cuddlefish.manifest.dump_manifest(args[1])
+        return
 
     target_cfg_json = None
     if not target_cfg:
@@ -502,7 +506,8 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
     deps = packaging.get_deps_for_targets(pkg_cfg, targets)
     from manifest import ManifestXPIThingy
     print "DEPS", deps
-    manifest2 = ManifestXPIThingy().build(pkg_cfg, deps, target_cfg)
+    manifest2 = ManifestXPIThingy().build(pkg_cfg, deps, target_cfg,
+                                          options.keydir)
     print
     for i,mi in enumerate(manifest2):
         (js,hjs,docs,hdocs,reqs,chromep) = mi
