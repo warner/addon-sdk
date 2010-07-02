@@ -413,6 +413,12 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
             target_cfg['tests'] = []
     elif command == "run":
         use_main = True
+    elif command == "upload-xpi":
+        import urllib2
+        data = open("%s.xpi" % target_cfg.name, "rb").read()
+        f = urllib2.urlopen("http://localhost:8000/upload-xpi", data)
+        print f.read()
+        sys.exit(0)
     else:
         print >>sys.stderr, "Unknown command: %s" % command
         print >>sys.stderr, "Try using '--help' for assistance."

@@ -137,10 +137,18 @@ class ManifestXPIThingy:
             f.close()
             zf.write(tempname, zipname)
             os.unlink(tempname)
-        zf = zipfile.ZipFile("out.xpi", "w", zipfile.ZIP_DEFLATED)
+        zf = zipfile.ZipFile("%s.xpi" % target_cfg.name, "w", zipfile.ZIP_DEFLATED)
+
         add_data(zf, "loader", "fake loader\n")
+
+        misc_data = {"name": target_cfg.name,
+                     "version": "unknown version",
+                     }
+        add_data(zf, "misc.json", json.dumps(misc_data).encode("utf-8"))
+
         manifest_json = json.dumps(self.manifest).encode("utf-8")
         add_data(zf, "manifest.json", manifest_json)
+
         jid = target_cfg["id"]
         sk = preflight.check_for_privkey(keydir, jid, self.stderr)
         sig = preflight.my_b32encode(sk.sign(manifest_json))
