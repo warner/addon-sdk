@@ -117,6 +117,10 @@ def js_zipname(packagename, modulename):
     return "%s-lib/%s.js" % (packagename, modulename)
 def docs_zipname(packagename, modulename):
     return "%s-docs/%s.md" % (packagename, modulename)
+def datamap_zipname(packagename):
+    return "%s-data.json" % packagename
+def datafile_zipname(packagename, datapath):
+    return "%s-data/%s" % (packagename, datapath)
 
 class ManifestEntry:
     def get_entry_for_manifest(self):
@@ -177,12 +181,12 @@ class DataMap:
         datadir = os.path.join(pkg.root_dir, "data")
         for dataname in get_datafiles(datadir):
             absname = os.path.join(datadir, dataname)
-            zipname = os.path.join(pkg.name + "-data", dataname)
+            zipname = datafile_zipname(pkg.name, dataname)
             datamap[dataname] = hash_file(absname)
             self.files_to_copy.append( (zipname, absname) )
         self.data_manifest = json.dumps(datamap).encode("utf-8")
         self.data_manifest_hash = sha256(self.data_manifest).hexdigest()
-        self.data_manifest_zipname = pkg.name + "-data.json"
+        self.data_manifest_zipname = datamap_zipname(pkg.name)
 
 class ManifestXPIThingy:
     def build(self, pkg_cfg, packages, target_cfg, keydir, stderr=sys.stderr):
@@ -349,17 +353,37 @@ def dump_manifest(manifest_file):
             docs_hash2 = sha256(zf.open(docs).read()).hexdigest()
             if docs_hash != docs_hash2:
                 print "BADHASH", docs, docs_hash, docs_hash2
+        if data_hash:
+            datamap_zn = datamap_zipname(pkgname)
+            datamap = zf.open(datamap_zn).read()
+            data_hash2 = sha256(datamap).hexdigest()
+            if data_hash != data_hash2:
+                print "BADHASH", datamap_zn, data_hash, data_hash2
+
+            datamap_json = json.loads(datamap.decode("utf-8"))
+            for datafile_pathname, datafile_hash in datamap_json.items():
+                datafile_zn = datafile_zipname(pkgname, datafile_pathname)
+                data = zf.open(datafile_zn).read()
+                datafile_hash2 = sha256(data).hexdigest()
+                if datafile_hash != datafile_hash2:
+                    print "BADHASH", datafile_zn, datafile_hash, datafile_hash2
+                
+
 
     print "MANIFEST:"
     length = max([len(docs_zipname(me[0],me[1])) for me in manifest])
-    fmtstring = "%%d:  %%%ds [%%s]   %%%ds [%%s]   %%s%%s" % (length, length)
+    fmtstring = "%%d:  %%%ds [%%s]   %%%ds [%%s]   %%s%%s%%s" % (length, length)
     for i,me in enumerate(manifest):
         (pkgname, modname, js_hash, docs_hash, reqs, chromep, data_hash) = me
         reqstring = "{%s}" % (", ".join(["%s=%d" % (x,reqs[x]) for x in reqs]))
+        chromestring = {True:"+chrome", False:""}[chromep]
+        datastring = ""
+        if data_hash:
+            datastring = "+data=[%s]" % data_hash[:4]
         js = js_zipname(pkgname, modname)
         docs = docs_zipname(pkgname, modname)
         print fmtstring % (i, js,js_hash[:4],  docs,docs_hash[:4], reqstring,
-                           {True:"+chrome", False:""}[chromep])
+                           chromestring, datastring)
 
 if __name__ == '__main__':
     for fn in sys.argv[1:]:
