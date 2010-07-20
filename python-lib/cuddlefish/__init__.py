@@ -519,12 +519,13 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
 
     pkg_length = max([len(me[0]) for me in manifest])
     mod_length = max([len(me[1]) for me in manifest])
-    fmtstring = "%%d:  %%%ds   %%%ds .js=[%%s] .md=[%%s]   %%s%%s%%s" % \
+    fmtstring = "%%d:  %%%ds   %%%ds .js=[%%4s] .md=[%%4s]   %%s%%s%%s" % \
                 (pkg_length, mod_length)
     for i,me in enumerate(manifest):
         (pkgname, modname, js_hash, docs_hash, reqs, chromep, data_hash) = me
         reqstring = "{%s}" % (", ".join(["%s=%d" % (x,reqs[x]) for x in reqs]))
         chromestring = {True:"+chrome", False:""}[chromep]
+        if docs_hash is None: docs_hash = ""
         datastring = ""
         if data_hash:
             datastring = "+data=[%s]" % data_hash[:4]

@@ -372,11 +372,12 @@ def dump_manifest(manifest_file):
 
     print "MANIFEST:"
     length = max([len(docs_zipname(me[0],me[1])) for me in manifest])
-    fmtstring = "%%d:  %%%ds [%%s]   %%%ds [%%s]   %%s%%s%%s" % (length, length)
+    fmtstring = "%%d:  %%%ds [%%4s]   %%%ds [%%4s]   %%s%%s%%s" % (length, length)
     for i,me in enumerate(manifest):
         (pkgname, modname, js_hash, docs_hash, reqs, chromep, data_hash) = me
         reqstring = "{%s}" % (", ".join(["%s=%d" % (x,reqs[x]) for x in reqs]))
         chromestring = {True:"+chrome", False:""}[chromep]
+        if docs_hash is None: docs_hash = ""
         datastring = ""
         if data_hash:
             datastring = "+data=[%s]" % data_hash[:4]
