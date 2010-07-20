@@ -510,16 +510,27 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
         targets.extend(options.extra_packages.split(","))
 
     deps = packaging.get_deps_for_targets(pkg_cfg, targets)
-    from manifest import ManifestXPIThingy
+    from manifest import ManifestXPIThingy, dump_manifest
     print "DEPS", deps
-    manifest2 = ManifestXPIThingy().build(pkg_cfg, deps, target_cfg,
-                                          options.keydir)
+    m = ManifestXPIThingy().build(pkg_cfg, deps, target_cfg, options.keydir)
     print
-    for i,mi in enumerate(manifest2):
-        (js,hjs,docs,hdocs,reqs,chromep) = mi
-        print "%d: %15s [%s]   %15s [%s]   %s%s" % (i, docs,hdocs[:6], js,hjs[:6], 
-                                            reqs,{True:"+chrome",
-                                                  False:""}[chromep])
+
+    manifest = [me.get_entry_for_manifest() for me in m]
+
+    pkg_length = max([len(me[0]) for me in manifest])
+    mod_length = max([len(me[1]) for me in manifest])
+    fmtstring = "%%d:  %%%ds   %%%ds .js=[%%s] .md=[%%s]   %%s%%s%%s" % \
+                (pkg_length, mod_length)
+    for i,me in enumerate(manifest):
+        (pkgname, modname, js_hash, docs_hash, reqs, chromep, data_hash) = me
+        reqstring = "{%s}" % (", ".join(["%s=%d" % (x,reqs[x]) for x in reqs]))
+        chromestring = {True:"+chrome", False:""}[chromep]
+        datastring = ""
+        if data_hash:
+            datastring = "+data=[%s]" % data_hash[:4]
+        print fmtstring % (i, pkgname, modname,  js_hash[:4],docs_hash[:4],
+                           reqstring, chromestring, datastring)
+
     return
 
     build = packaging.generate_build_for_target(
