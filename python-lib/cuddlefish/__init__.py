@@ -358,8 +358,8 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
         print "Wrote %s." % filename
         return
     elif command == "dump-manifest":
-        import cuddlefish.manifest
-        cuddlefish.manifest.dump_manifest(args[1])
+        from cuddlefish.xpi import dump_manifest
+        dump_manifest(args[1])
         return
 
     target_cfg_json = None
@@ -591,7 +591,7 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
         xpi_name = XPI_FILENAME % target_cfg.name
         print "Exporting extension to %s." % xpi_name
 
-        from manifest import ManifestXPIThingy, dump_manifest
+        from xpi import ManifestXPIThingy
         print "DEPS", deps
         m = ManifestXPIThingy().build(xpi_name, pkg_cfg, deps, target_cfg,
                                       options.keydir)
