@@ -150,8 +150,8 @@ class DataMap:
         self.data_manifest_zipname = datamap_zipname(pkg.name)
 
 class ManifestXPIThingy:
-    def build(self, xpi_name, pkg_cfg, packages, target_cfg, keydir,
-              stderr=sys.stderr):
+    def build(self, xpi_name, pkg_cfg, packages, target_cfg, manifest_rdf,
+              keydir, stderr=sys.stderr):
         self.manifest = [] # maps incrementing numbers to ManifestEntry s
         self.pkg_cfg = pkg_cfg
         self.packages = packages
@@ -177,6 +177,7 @@ class ManifestXPIThingy:
         def add_file(zipname, localfile):
             zf.write(localfile, zipname)
 
+        add_data("install.rdf", manifest_rdf)
         add_data("loader", "fake loader\n")
 
         misc_data = {"name": target_cfg.name,

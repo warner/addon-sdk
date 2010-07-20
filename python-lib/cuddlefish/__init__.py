@@ -575,17 +575,17 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
         from cuddlefish.xpi import build_xpi
         from cuddlefish.rdf import gen_manifest, RDFUpdate
 
-        manifest = gen_manifest(template_root_dir=app_extension_dir,
-                                target_cfg=target_cfg,
-                                bundle_id=bundle_id,
-                                update_url=options.update_url,
-                                bootstrap=True)
+        manifest_rdf = gen_manifest(template_root_dir=app_extension_dir,
+                                    target_cfg=target_cfg,
+                                    bundle_id=bundle_id,
+                                    update_url=options.update_url,
+                                    bootstrap=True)
 
         if options.update_link:
             rdf_name = UPDATE_RDF_FILENAME % target_cfg.name
             print "Exporting update description to %s." % rdf_name
             update = RDFUpdate()
-            update.add(manifest, options.update_link)
+            update.add(manifest_rdf, options.update_link)
             open(rdf_name, "w").write(str(update))
 
         xpi_name = XPI_FILENAME % target_cfg.name
@@ -594,7 +594,7 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
         from xpi import ManifestXPIThingy
         print "DEPS", deps
         m = ManifestXPIThingy().build(xpi_name, pkg_cfg, deps, target_cfg,
-                                      options.keydir)
+                                      str(manifest_rdf), options.keydir)
         print
 
         manifest = [me.get_entry_for_manifest() for me in m]
