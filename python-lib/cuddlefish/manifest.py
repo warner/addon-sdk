@@ -189,7 +189,8 @@ class DataMap:
         self.data_manifest_zipname = datamap_zipname(pkg.name)
 
 class ManifestXPIThingy:
-    def build(self, pkg_cfg, packages, target_cfg, keydir, stderr=sys.stderr):
+    def build(self, xpi_name, pkg_cfg, packages, target_cfg, keydir,
+              stderr=sys.stderr):
         self.manifest = [] # maps incrementing numbers to ManifestEntry s
         self.pkg_cfg = pkg_cfg
         self.packages = packages
@@ -204,8 +205,7 @@ class ManifestXPIThingy:
         self.process_module(*self.find_top(target_cfg))
 
         # now build an XPI out of it
-        xpiname = "%s.xpi" % target_cfg.name
-        zf = zipfile.ZipFile(xpiname, "w", zipfile.ZIP_DEFLATED)
+        zf = zipfile.ZipFile(xpi_name, "w", zipfile.ZIP_DEFLATED)
         def add_data(zipname, data):
             tempname = ".ziptemp"
             f = open(tempname, "wb")

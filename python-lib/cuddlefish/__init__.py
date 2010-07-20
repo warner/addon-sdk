@@ -510,29 +510,6 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
         targets.extend(options.extra_packages.split(","))
 
     deps = packaging.get_deps_for_targets(pkg_cfg, targets)
-    from manifest import ManifestXPIThingy, dump_manifest
-    print "DEPS", deps
-    m = ManifestXPIThingy().build(pkg_cfg, deps, target_cfg, options.keydir)
-    print
-
-    manifest = [me.get_entry_for_manifest() for me in m]
-
-    pkg_length = max([len(me[0]) for me in manifest])
-    mod_length = max([len(me[1]) for me in manifest])
-    fmtstring = "%%d:  %%%ds   %%%ds .js=[%%4s] .md=[%%4s]   %%s%%s%%s" % \
-                (pkg_length, mod_length)
-    for i,me in enumerate(manifest):
-        (pkgname, modname, js_hash, docs_hash, reqs, chromep, data_hash) = me
-        reqstring = "{%s}" % (", ".join(["%s=%d" % (x,reqs[x]) for x in reqs]))
-        chromestring = {True:"+chrome", False:""}[chromep]
-        if docs_hash is None: docs_hash = ""
-        datastring = ""
-        if data_hash:
-            datastring = "+data=[%s]" % data_hash[:4]
-        print fmtstring % (i, pkgname, modname,  js_hash[:4],docs_hash[:4],
-                           reqstring, chromestring, datastring)
-
-    return
 
     build = packaging.generate_build_for_target(
         pkg_cfg, target, deps,
@@ -613,6 +590,32 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
 
         xpi_name = XPI_FILENAME % target_cfg.name
         print "Exporting extension to %s." % xpi_name
+
+        from manifest import ManifestXPIThingy, dump_manifest
+        print "DEPS", deps
+        m = ManifestXPIThingy().build(xpi_name, pkg_cfg, deps, target_cfg,
+                                      options.keydir)
+        print
+
+        manifest = [me.get_entry_for_manifest() for me in m]
+
+        pkg_length = max([len(me[0]) for me in manifest])
+        mod_length = max([len(me[1]) for me in manifest])
+        fmtstring = "%%d:  %%%ds   %%%ds .js=[%%4s] .md=[%%4s]   %%s%%s%%s" % \
+                    (pkg_length, mod_length)
+        for i,me in enumerate(manifest):
+            (pkgname, modname, js_hash, docs_hash, reqs, chromep, data_hash) = me
+            reqstring = "{%s}" % (", ".join(["%s=%d" % (x,reqs[x]) for x in reqs]))
+            chromestring = {True:"+chrome", False:""}[chromep]
+            if docs_hash is None: docs_hash = ""
+            datastring = ""
+            if data_hash:
+                datastring = "+data=[%s]" % data_hash[:4]
+            print fmtstring % (i, pkgname, modname,  js_hash[:4],docs_hash[:4],
+                               reqstring, chromestring, datastring)
+
+        return
+
         build_xpi(template_root_dir=app_extension_dir,
                   manifest=manifest,
                   xpi_name=xpi_name,
