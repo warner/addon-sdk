@@ -193,6 +193,7 @@ class ManifestXPIThingy:
         self.manifest = [] # maps incrementing numbers to ManifestEntry s
         self.pkg_cfg = pkg_cfg
         self.packages = packages
+        self.used_packages = set()
         self.stderr = stderr
         self.modules = {} # maps require() name to index of self.manifest
         self.datamaps = {} # maps package name to DataMap instance
@@ -233,16 +234,21 @@ class ManifestXPIThingy:
         sig_data = json.dumps( (jid, vk, sig) ).encode("utf-8")
         add_data("manifest.sig.json", sig_data)
 
-        for i,me in enumerate(self.manifest):
-            add_file(me.get_js_zipname(), me.js_filename)
-            if me.get_docs_zipname():
-                add_file(me.get_docs_zipname(), me.docs_filename)
-
-        for pkgname in sorted(self.datamaps.keys()):
-            dm = self.datamaps[pkgname]
-            add_data(dm.data_manifest_zipname, dm.data_manifest)
-            for (zipname, fn) in sorted(dm.files_to_copy):
-                add_file(zipname, fn)
+        # build the XPI, keeping things sorted by packagename to be pretty
+        used_packages = sorted(self.used_packages)
+        for pkgname in used_packages:
+            for i,me in enumerate(self.manifest):
+                if me.packagename == pkgname:
+                    add_file(me.get_js_zipname(), me.js_filename)
+            for i,me in enumerate(self.manifest):
+                if me.packagename == pkgname:
+                    if me.get_docs_zipname():
+                        add_file(me.get_docs_zipname(), me.docs_filename)
+            if pkgname in self.datamaps:
+                dm = self.datamaps[pkgname]
+                add_data(dm.data_manifest_zipname, dm.data_manifest)
+                for (zipname, fn) in sorted(dm.files_to_copy):
+                    add_file(zipname, fn)
 
         zf.close()
         return self.manifest
@@ -268,6 +274,7 @@ class ManifestXPIThingy:
         me = ManifestEntry()
         self.manifest.append(me)
 
+        self.used_packages.add(pkg.name)
         me.packagename = pkg.name
         me.modulename = modulename
         me.js_filename = js_filename
