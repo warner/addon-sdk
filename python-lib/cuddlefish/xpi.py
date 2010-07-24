@@ -182,6 +182,7 @@ class ManifestXPIThingy:
 
         misc_data = {"name": target_cfg.name,
                      "version": "unknown version",
+                     "jid": target_cfg["id"],
                      }
         add_data("misc.json", json.dumps(misc_data).encode("utf-8"))
 
