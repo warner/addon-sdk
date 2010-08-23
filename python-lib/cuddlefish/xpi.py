@@ -341,8 +341,10 @@ def dump_manifest(manifest_file):
 
 
     print "MANIFEST:"
-    length = max([len(docs_zipname(me[0],me[1])) for me in manifest])
-    fmtstring = "%%d:  %%%ds [%%4s]   %%%ds [%%4s]   %%s%%s%%s" % (length, length)
+    jslength = max([len(js_zipname(me[0],me[1])) for me in manifest])
+    docslength = max([len(docs_zipname(me[0],me[1])) for me in manifest])
+    fmtstring = "%%d:  %%-%ds [%%4s]  /  %%-%ds [%%4s]   %%s%%s%%s" % \
+                (jslength, docslength)
     for i,me in enumerate(manifest):
         (pkgname, modname, js_hash, docs_hash, reqs, chromep, data_hash) = me
         reqstring = "{%s}" % (", ".join(["%s=%d" % (x,reqs[x]) for x in reqs]))
