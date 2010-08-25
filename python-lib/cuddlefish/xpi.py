@@ -151,7 +151,7 @@ class DataMap:
 
 class ManifestXPIThingy:
     def build(self, xpi_name, pkg_cfg, packages, target_cfg, manifest_rdf,
-              keydir, stderr=sys.stderr):
+              keydir, app_extension_dir, stderr=sys.stderr):
         self.manifest = [] # maps incrementing numbers to ManifestEntry s
         self.pkg_cfg = pkg_cfg
         self.packages = packages
@@ -176,8 +176,12 @@ class ManifestXPIThingy:
             os.unlink(tempname)
         def add_file(zipname, localfile):
             zf.write(localfile, zipname)
+        def add_app_extension_file(filename):
+            add_file(filename, os.path.join(app_extension_dir, filename))
 
         add_data("install.rdf", manifest_rdf)
+        add_app_extension_file("bootstrap.js")
+        add_app_extension_file("components/harness.js")
         add_data("loader", "fake loader\n")
 
         misc_data = {"name": target_cfg.name,

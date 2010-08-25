@@ -594,7 +594,8 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
         from xpi import ManifestXPIThingy
         print "DEPS", deps
         m = ManifestXPIThingy().build(xpi_name, pkg_cfg, deps, target_cfg,
-                                      str(manifest_rdf), options.keydir)
+                                      str(manifest_rdf), options.keydir,
+                                      app_extension_dir)
         print
 
         manifest = [me.get_entry_for_manifest() for me in m]
