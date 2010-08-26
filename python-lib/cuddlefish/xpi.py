@@ -1,6 +1,5 @@
 import os
 import zipfile
-import base64
 
 import simplejson as json
 
@@ -177,7 +176,7 @@ class XPIMapper:
         self.app_extension_dir = app_extension_dir
 
     def add_data(self, zipname, data):
-        self.map[zipname] = (False, base64.b64encode(data))
+        self.map[zipname] = (False, data) # only tolerates unicode strings
     def add_file(self, zipname, localfile):
         self.map[zipname] = (True, localfile)
     def add_app_extension_file(self, filename):

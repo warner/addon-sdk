@@ -156,6 +156,17 @@ function buildHarnessService(rootFileSpec, dump, logError,
     return dir;
   }
 
+  function myGetFileFromZip(path) {
+    var x = options.map[path];
+    if (x[0]) {
+      // x[1] is a local filename. Build a URL to it.
+      return "";
+    } else {
+      // x[1] is the actual contents. Return a data: URL.
+      return "";
+    }
+  }
+
   function buildLoader() {
     // TODO: This variable doesn't seem to be used, we should
     // be able to remove it.
