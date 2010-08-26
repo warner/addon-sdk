@@ -1,5 +1,6 @@
 import os
 import zipfile
+import base64
 
 import simplejson as json
 
@@ -149,6 +150,43 @@ class DataMap:
         self.data_manifest_hash = sha256(self.data_manifest).hexdigest()
         self.data_manifest_zipname = datamap_zipname(pkg.name)
 
+class XPIBuilder:
+    def __init__(self, xpi_name, app_extension_dir):
+        self.zf = zipfile.ZipFile(xpi_name, "w", zipfile.ZIP_DEFLATED)
+        self.app_extension_dir = app_extension_dir
+
+    def add_data(self, zipname, data):
+        tempname = ".ziptemp"
+        f = open(tempname, "wb")
+        f.write(data)
+        f.close()
+        self.zf.write(tempname, zipname)
+        os.unlink(tempname)
+    def add_file(self, zipname, localfile):
+        self.zf.write(localfile, zipname)
+    def add_app_extension_file(self, filename):
+        self.add_file(filename, os.path.join(self.app_extension_dir, filename))
+
+    def close(self):
+        self.zf.close()
+        del self.zf
+
+class XPIMapper:
+    def __init__(self, app_extension_dir):
+        self.map = {} # zipname -> (True, filename) or (False, b64(data))
+        self.app_extension_dir = app_extension_dir
+
+    def add_data(self, zipname, data):
+        self.map[zipname] = (False, base64.b64encode(data))
+    def add_file(self, zipname, localfile):
+        self.map[zipname] = (True, localfile)
+    def add_app_extension_file(self, filename):
+        self.add_file(filename, os.path.join(self.app_extension_dir, filename))
+
+    def close(self):
+        pass
+
+
 class ManifestXPIThingy:
     def build(self, xpi_name, pkg_cfg, packages, target_cfg, manifest_rdf,
               keydir, app_extension_dir, stderr=sys.stderr):
@@ -166,59 +204,52 @@ class ManifestXPIThingy:
         self.process_module(*self.find_top(target_cfg))
 
         # now build an XPI out of it
-        zf = zipfile.ZipFile(xpi_name, "w", zipfile.ZIP_DEFLATED)
-        def add_data(zipname, data):
-            tempname = ".ziptemp"
-            f = open(tempname, "wb")
-            f.write(data)
-            f.close()
-            zf.write(tempname, zipname)
-            os.unlink(tempname)
-        def add_file(zipname, localfile):
-            zf.write(localfile, zipname)
-        def add_app_extension_file(filename):
-            add_file(filename, os.path.join(app_extension_dir, filename))
+        if xpi_name:
+            zf = XPIBuilder(xpi_name, app_extension_dir)
+        else:
+            # or a mapping
+            zf = XPIMapper(app_extension_dir)
 
-        add_data("install.rdf", manifest_rdf)
-        add_app_extension_file("bootstrap.js")
-        add_app_extension_file("components/harness.js")
-        add_data("loader", "fake loader\n")
+        zf.add_data("install.rdf", manifest_rdf)
+        zf.add_app_extension_file("bootstrap.js")
+        zf.add_app_extension_file("components/harness.js")
+        zf.add_data("loader", "fake loader\n")
 
         misc_data = {"name": target_cfg.name,
                      "version": "unknown version",
                      "jid": target_cfg["id"],
                      }
-        add_data("misc.json", json.dumps(misc_data).encode("utf-8"))
+        zf.add_data("misc.json", json.dumps(misc_data).encode("utf-8"))
 
         entries = [me.get_entry_for_manifest() for me in self.manifest]
         manifest_json = json.dumps(entries).encode("utf-8")
-        add_data("manifest.json", manifest_json)
+        zf.add_data("manifest.json", manifest_json)
 
         jid = target_cfg["id"]
         sk = preflight.check_for_privkey(keydir, jid, self.stderr)
         sig = preflight.my_b32encode(sk.sign(manifest_json))
         vk = preflight.my_b32encode(sk.get_verifying_key().to_string())
         sig_data = json.dumps( (jid, vk, sig) ).encode("utf-8")
-        add_data("manifest.sig.json", sig_data)
+        zf.add_data("manifest.sig.json", sig_data)
 
         # build the XPI, keeping things sorted by packagename to be pretty
         used_packages = sorted(self.used_packages)
         for pkgname in used_packages:
             for i,me in enumerate(self.manifest):
                 if me.packagename == pkgname:
-                    add_file(me.get_js_zipname(), me.js_filename)
+                    zf.add_file(me.get_js_zipname(), me.js_filename)
             for i,me in enumerate(self.manifest):
                 if me.packagename == pkgname:
                     if me.get_docs_zipname():
-                        add_file(me.get_docs_zipname(), me.docs_filename)
+                        zf.add_file(me.get_docs_zipname(), me.docs_filename)
             if pkgname in self.datamaps:
                 dm = self.datamaps[pkgname]
-                add_data(dm.data_manifest_zipname, dm.data_manifest)
+                zf.add_data(dm.data_manifest_zipname, dm.data_manifest)
                 for (zipname, fn) in sorted(dm.files_to_copy):
-                    add_file(zipname, fn)
+                    zf.add_file(zipname, fn)
 
         zf.close()
-        return self.manifest
+        return self.manifest, zf
 
     def find_top(self, target_cfg):
         for libdir in target_cfg.lib:
