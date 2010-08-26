@@ -173,7 +173,7 @@ function buildHarnessService(rootFileSpec, dump, logError,
     var compMgr = Components.manager;
     compMgr = compMgr.QueryInterface(Ci.nsIComponentRegistrar);
 
-    dump("MAP: " + options.map["manifest.json"] +"\n");
+    dump("MAP: " + JSON.stringify(options.map,null,2) +"\n");
 
     for (name in options.resources) {
       var path = options.resources[name];

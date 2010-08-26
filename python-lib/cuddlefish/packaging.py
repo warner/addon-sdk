@@ -274,6 +274,9 @@ def generate_build_for_target(pkg_cfg, target, deps, prefix='',
         if ("loader" in dep_cfg) and ("loader" not in build):
             build.loader = "resource://%s-%s" % (prefix + dep,
                                                  dep_cfg.loader)
+            # package.json always has a slash
+            loader_path = os.path.join(*dep_cfg.loader.split("/"))
+            build.loader_filename = os.path.join(dep_cfg.root_dir, loader_path)
 
     target_cfg = pkg_cfg.packages[target]
     if include_tests and not include_dep_tests:

@@ -188,7 +188,7 @@ class XPIMapper:
 
 class ManifestXPIThingy:
     def build(self, xpi_name, pkg_cfg, packages, target_cfg, manifest_rdf,
-              keydir, app_extension_dir, stderr=sys.stderr):
+              keydir, app_extension_dir, loader_filename, stderr=sys.stderr):
         self.manifest = [] # maps incrementing numbers to ManifestEntry s
         self.pkg_cfg = pkg_cfg
         self.packages = packages
@@ -212,7 +212,7 @@ class ManifestXPIThingy:
         zf.add_data("install.rdf", manifest_rdf)
         zf.add_app_extension_file("bootstrap.js")
         zf.add_app_extension_file("components/harness.js")
-        zf.add_data("loader", "fake loader\n")
+        zf.add_file("loader", loader_filename)
 
         misc_data = {"name": target_cfg.name,
                      "version": "unknown version",

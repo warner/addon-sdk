@@ -597,9 +597,15 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
         print "Exporting extension to %s." % xpi_name
 
     print "DEPS", deps
+    from pprint import pprint
+    print "LOADER"
+    #pprint(harness_options)
+    print harness_options["loader"]
+    print harness_options["loader_filename"]
     m,zf = ManifestXPIThingy().build(xpi_name, pkg_cfg, deps, target_cfg,
                                      str(manifest_rdf), options.keydir,
-                                     app_extension_dir)
+                                     app_extension_dir,
+                                     harness_options["loader_filename"])
     print
 
     if True and command == "xpi":
@@ -626,6 +632,7 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
             options.addons = options.addons.split(",")
 
         harness_options["map"] = zf.map # everything that would be in the XPI
+        print zf.map
 
         try:
             retval = run_app(harness_root_dir=app_extension_dir,
