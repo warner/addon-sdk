@@ -189,7 +189,7 @@ class XPIMapper:
 class ManifestXPIThingy:
     def __init__(self, pkg_cfg, packages,
                  target_cfg, manifest_rdf, app_extension_dir,
-                 keydir, loader_filename, stderr=sys.stderr):
+                 keydir, loader_entry, loader_modules, stderr=sys.stderr):
         self.manifest = [] # maps incrementing numbers to ManifestEntry s
         self.pkg_cfg = pkg_cfg
         self.packages = packages
@@ -199,7 +199,9 @@ class ManifestXPIThingy:
         self.manifest_rdf = manifest_rdf
         self.app_extension_dir = app_extension_dir
         self.keydir = keydir
-        self.loader_filename = loader_filename
+        assert loader_entry in loader_modules
+        self.loader_entry = loader_entry
+        self.loader_modules = loader_modules
         self.modules = {} # maps require() name to index of self.manifest
         self.datamaps = {} # maps package name to DataMap instance
         self.files = [] # maps manifest index to (absfn,absfn) js/docs pair
@@ -219,26 +221,46 @@ class ManifestXPIThingy:
         # reaches
         self.process_module(*self.find_top(self.target_cfg))
 
+        # stage 1
         zf.add_data("install.rdf", self.manifest_rdf)
         zf.add_app_extension_file("bootstrap.js")
         zf.add_app_extension_file("components/harness.js")
-        zf.add_file("loader", self.loader_filename)
+
+        # stage 2
+        loader_manifest = { "entry": self.loader_entry,
+                            "manifest": {}, # name to (hash, zipfilename)
+                           }
+        loader_files = {} # zipfilename to filename
+        for name in sorted(self.loader_modules.keys()):
+            fn = self.loader_modules[name]
+            ign,zipfilename = os.path.split(fn)
+            h = hash_file(fn)
+            if zipfilename in loader_files:
+                raise ValueError("please don't use colliding loader filenames")
+            loader_files[zipfilename] = fn
+            loader_manifest["manifest"][name] = (h, zipfilename)
+        loader_manifest_json = json.dumps(loader_manifest).encode("utf-8")+"\n"
+        zf.add_data("loader.json", loader_manifest_json)
+        # TODO: loader.json.sig, somehow
+        for zipfilename in sorted(loader_files.keys()):
+            zf.add_file("loader/" + zipfilename, loader_files[zipfilename])
 
         misc_data = {"name": self.target_cfg.name,
                      "version": "unknown version",
                      "jid": self.target_cfg["id"],
                      }
-        zf.add_data("misc.json", json.dumps(misc_data).encode("utf-8"))
+        zf.add_data("misc.json", json.dumps(misc_data).encode("utf-8")+"\n")
 
+        # stage 3
         entries = [me.get_entry_for_manifest() for me in self.manifest]
-        manifest_json = json.dumps(entries).encode("utf-8")
+        manifest_json = json.dumps(entries).encode("utf-8")+"\n"
         zf.add_data("manifest.json", manifest_json)
 
         jid = self.target_cfg["id"]
         sk = preflight.check_for_privkey(self.keydir, jid, self.stderr)
         sig = preflight.my_b32encode(sk.sign(manifest_json))
         vk = preflight.my_b32encode(sk.get_verifying_key().to_string())
-        sig_data = json.dumps( (jid, vk, sig) ).encode("utf-8")
+        sig_data = json.dumps( (jid, vk, sig) ).encode("utf-8")+"\n"
         zf.add_data("manifest.sig.json", sig_data)
 
         # build the XPI, keeping things sorted by packagename to be pretty

@@ -582,9 +582,13 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
 
     from xpi import ManifestXPIThingy
 
+    loader_entry = "main"
+    loader_modules = {"main": harness_options["loader_filename"],
+                       }
+
     mxt = ManifestXPIThingy(pkg_cfg, deps, target_cfg, str(manifest_rdf),
                             app_extension_dir, options.keydir,
-                            harness_options["loader_filename"])
+                            loader_entry, loader_modules)
 
     if command == 'xpi':
         if options.update_link:

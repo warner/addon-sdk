@@ -1,0 +1,23 @@
+
+stage 1:
+ install.rdf
+ bootstrap.js
+ components/harness.js
+
+stage 2:
+ loader.json
+ (loader.sig.json)
+ -
+ loader/main.js
+ loader/extra.js
+
+stage 3:
+ manifest.json
+ (manifest.sig.json)
+ -
+ $TOPPACKAGE-lib/main.js
+ $TOPPACKAGE-docs/main.md
+ $TOPPACKAGE-data-manifest.json
+ $TOPPACKAGE-data/stuff.html
+ jetpack-core-lib/xhr.js
+ jetpack-core-docs/xhr.md
