@@ -582,10 +582,11 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
 
     from xpi import ManifestXPIThingy
 
-    xpi_name = None
+    mxt = ManifestXPIThingy(pkg_cfg, deps, target_cfg, str(manifest_rdf),
+                            app_extension_dir, options.keydir,
+                            harness_options["loader_filename"])
 
     if command == 'xpi':
-
         if options.update_link:
             rdf_name = UPDATE_RDF_FILENAME % target_cfg.name
             print "Exporting update description to %s." % rdf_name
@@ -593,33 +594,23 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
             update.add(manifest_rdf, options.update_link)
             open(rdf_name, "w").write(str(update))
 
-        xpi_name = XPI_FILENAME % target_cfg.name
-        print "Exporting extension to %s." % xpi_name
-
-    print "DEPS", deps
-    from pprint import pprint
-    print "LOADER"
-    #pprint(harness_options)
-    print harness_options["loader"]
-    print harness_options["loader_filename"]
-    m,zf = ManifestXPIThingy().build(xpi_name, pkg_cfg, deps, target_cfg,
-                                     str(manifest_rdf), options.keydir,
-                                     app_extension_dir,
-                                     harness_options["loader_filename"])
-    print
-
-    if True and command == "xpi":
-        quick_dump_manifest(m)
-        return
-
-    if command == "xpi":
-        if False:
+        if False: # old
             build_xpi(template_root_dir=app_extension_dir,
                       manifest=manifest,
                       xpi_name=xpi_name,
                       harness_options=harness_options,
                       xpts=xpts)
-    else:
+
+        xpi_name = XPI_FILENAME % target_cfg.name
+        print "Exporting extension to %s." % xpi_name
+        zf = mxt.build_xpi(xpi_name)
+        if True:
+            mxt.quick_dump()
+            return
+
+    else: # cfx run
+        zf = mxt.build_map()
+
         if options.use_server:
             from cuddlefish.server import run_app
         else:
@@ -632,7 +623,6 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
             options.addons = options.addons.split(",")
 
         harness_options["map"] = zf.map # everything that would be in the XPI
-        print zf.map
 
         try:
             retval = run_app(harness_root_dir=app_extension_dir,
@@ -651,24 +641,5 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
                 retval = -1
             else:
                 raise
+
     sys.exit(retval)
-
-def quick_dump_manifest(m):
-    manifest = [me.get_entry_for_manifest() for me in m]
-
-    pkg_length = max([len(me[0]) for me in manifest])
-    mod_length = max([len(me[1]) for me in manifest])
-    fmtstring = "%%d:  %%%ds   %%%ds .js=[%%4s] .md=[%%4s]   %%s%%s%%s" % \
-                (pkg_length, mod_length)
-    for i,me in enumerate(manifest):
-        (pkgname, modname, js_hash, docs_hash, reqs, chromep, data_hash) = me
-        reqstring = "{%s}" % (", ".join(["%s=%d" % (x,reqs[x]) for x in reqs]))
-        chromestring = {True:"+chrome", False:""}[chromep]
-        if docs_hash is None: docs_hash = ""
-        datastring = ""
-        if data_hash:
-            datastring = "+data=[%s]" % data_hash[:4]
-        print fmtstring % (i, pkgname, modname,  js_hash[:4],docs_hash[:4],
-                           reqstring, chromestring, datastring)
-
-    

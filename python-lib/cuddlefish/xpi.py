@@ -187,36 +187,46 @@ class XPIMapper:
 
 
 class ManifestXPIThingy:
-    def build(self, xpi_name, pkg_cfg, packages, target_cfg, manifest_rdf,
-              keydir, app_extension_dir, loader_filename, stderr=sys.stderr):
+    def __init__(self, pkg_cfg, packages,
+                 target_cfg, manifest_rdf, app_extension_dir,
+                 keydir, loader_filename, stderr=sys.stderr):
         self.manifest = [] # maps incrementing numbers to ManifestEntry s
         self.pkg_cfg = pkg_cfg
         self.packages = packages
         self.used_packages = set()
         self.stderr = stderr
+        self.target_cfg = target_cfg
+        self.manifest_rdf = manifest_rdf
+        self.app_extension_dir = app_extension_dir
+        self.keydir = keydir
+        self.loader_filename = loader_filename
         self.modules = {} # maps require() name to index of self.manifest
         self.datamaps = {} # maps package name to DataMap instance
         self.files = [] # maps manifest index to (absfn,absfn) js/docs pair
 
+    def build_xpi(self, xpi_name):
+        zf = XPIBuilder(xpi_name, self.app_extension_dir)
+        self.build(zf)
+        return zf
+
+    def build_map(self):
+        zf = XPIMapper(self.app_extension_dir)
+        self.build(zf)
+        return zf
+
+    def build(self, zf):
         # process the top module, which recurses to process everything it
         # reaches
-        self.process_module(*self.find_top(target_cfg))
+        self.process_module(*self.find_top(self.target_cfg))
 
-        # now build an XPI out of it
-        if xpi_name:
-            zf = XPIBuilder(xpi_name, app_extension_dir)
-        else:
-            # or a mapping
-            zf = XPIMapper(app_extension_dir)
-
-        zf.add_data("install.rdf", manifest_rdf)
+        zf.add_data("install.rdf", self.manifest_rdf)
         zf.add_app_extension_file("bootstrap.js")
         zf.add_app_extension_file("components/harness.js")
-        zf.add_file("loader", loader_filename)
+        zf.add_file("loader", self.loader_filename)
 
-        misc_data = {"name": target_cfg.name,
+        misc_data = {"name": self.target_cfg.name,
                      "version": "unknown version",
-                     "jid": target_cfg["id"],
+                     "jid": self.target_cfg["id"],
                      }
         zf.add_data("misc.json", json.dumps(misc_data).encode("utf-8"))
 
@@ -224,8 +234,8 @@ class ManifestXPIThingy:
         manifest_json = json.dumps(entries).encode("utf-8")
         zf.add_data("manifest.json", manifest_json)
 
-        jid = target_cfg["id"]
-        sk = preflight.check_for_privkey(keydir, jid, self.stderr)
+        jid = self.target_cfg["id"]
+        sk = preflight.check_for_privkey(self.keydir, jid, self.stderr)
         sig = preflight.my_b32encode(sk.sign(manifest_json))
         vk = preflight.my_b32encode(sk.get_verifying_key().to_string())
         sig_data = json.dumps( (jid, vk, sig) ).encode("utf-8")
@@ -248,7 +258,7 @@ class ManifestXPIThingy:
                     zf.add_file(zipname, fn)
 
         zf.close()
-        return self.manifest, zf
+
 
     def find_top(self, target_cfg):
         for libdir in target_cfg.lib:
@@ -328,6 +338,26 @@ class ManifestXPIThingy:
                         docs = maybe_docs
                     return (pkg, name, js, docs)
         raise KeyError("unable to find module '%s' in any package" % name)
+
+    def quick_dump(self):
+        manifest = [me.get_entry_for_manifest() for me in self.manifest]
+
+        pkg_length = max([len(me[0]) for me in manifest])
+        mod_length = max([len(me[1]) for me in manifest])
+        fmtstring = "%%d:  %%%ds   %%%ds .js=[%%4s] .md=[%%4s]   %%s%%s%%s" % \
+                    (pkg_length, mod_length)
+        for i,me in enumerate(manifest):
+            (pkgname, modname, js_hash, docs_hash, reqs, chromep, data_hash) = me
+            reqstring = "{%s}" % (", ".join(["%s=%d" % (x,reqs[x]) for x in reqs]))
+            chromestring = {True:"+chrome", False:""}[chromep]
+            if docs_hash is None: docs_hash = ""
+            datastring = ""
+            if data_hash:
+                datastring = "+data=[%s]" % data_hash[:4]
+            print fmtstring % (i, pkgname, modname,  js_hash[:4],docs_hash[:4],
+                               reqstring, chromestring, datastring)
+
+
 
 
 def dump_manifest(manifest_file):
