@@ -1,4 +1,4 @@
-'''
+"""
     This is a really crummy, slow Python implementation of the Mozilla
     platform's nsIVersionComparator interface:
 
@@ -7,13 +7,13 @@
     For more information, also see:
 
       http://mxr.mozilla.org/mozilla/source/xpcom/glue/nsVersionComparator.cpp
-'''
+"""
 
 import re
 import sys
 
 class VersionPart(object):
-    '''
+    """
     Examples:
 
       >>> VersionPart('1')
@@ -63,7 +63,7 @@ class VersionPart(object):
 
       >>> VersionPart('1') > VersionPart('')
       True
-    '''
+    """
 
     _int_part = re.compile('[+-]?(\d*)(.*)')
     _num_chars = '0123456789+-'
@@ -113,7 +113,16 @@ class VersionPart(object):
 
         return cmp(str1, str2)
 
-    def __cmp__(self, other):
+    def __lt__(self, other):
+      if self.the_method_formerly_named__cmp__(other) < 0:
+        return True
+      return False
+    def __eq__(self, other):
+      if self.the_method_formerly_named__cmp__(other) == 0:
+        return True
+      return False
+
+    def the_method_formerly_named__cmp__(self, other):
         r = cmp(self.numA, other.numA)
         if r:
             return r
