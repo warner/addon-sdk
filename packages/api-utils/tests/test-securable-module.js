@@ -359,7 +359,7 @@ exports.testModifyModuleSandbox = function (test) {
   var out;
 
   function modifyModuleSandbox(sandbox, options) {
-    sandbox.defineProperty("print", function() { out = options.contents; });
+    sandbox.defineProperty("print", function() { out = options.filename; });
   }
 
   var loader = new sm.Loader({modifyModuleSandbox: modifyModuleSandbox,
@@ -367,8 +367,6 @@ exports.testModifyModuleSandbox = function (test) {
                               fs: beetFs});
 
   loader.require("beets");
-  test.assertEqual(out,
-                   "print(\"hi from beets\"); exports.beets = 5;",
+  test.assertEqual(out, "beets",
                    "testModifyModuleSandbox() mods override globals");
-  // this one fails because of the prepended "use strict";
 };
