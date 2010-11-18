@@ -370,4 +370,5 @@ exports.testModifyModuleSandbox = function (test) {
   test.assertEqual(out,
                    "print(\"hi from beets\"); exports.beets = 5;",
                    "testModifyModuleSandbox() mods override globals");
+  // this one fails because of the prepended "use strict";
 };

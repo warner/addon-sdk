@@ -79,7 +79,7 @@ const Panel = Symbiont.resolve({
   _asyncEmit: Symbiont.required,
   on: Symbiont.required,
   removeListener: Symbiont.required,
-  _destructor: Symbiont.required,
+  //_destructor: Symbiont.required,
 
   _inited: false,
 

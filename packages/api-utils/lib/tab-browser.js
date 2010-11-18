@@ -131,12 +131,12 @@ exports.addTab = function addTab(url, options) {
       win.gBrowser.selectedTab = tab;
     if (options.onLoad) {
       let tabBrowser = win.gBrowser.getBrowserForTab(tab);
-      tabBrowser.addEventListener("load", function(e) {
+      tabBrowser.addEventListener("load", function xyz(e) {
         if (e.target.defaultView.content.location == "about:blank")
           return;
         // remove event handler from addTab - don't want notified
         // for subsequent loads in same tab.
-        tabBrowser.removeEventListener("load", arguments.callee, true);
+        tabBrowser.removeEventListener("load", xyz, true);
         require("errors").catchAndLog(function(e) options.onLoad(e))(e);
       }, true);
     }
@@ -543,8 +543,8 @@ function openURLInNewWindow(options, tabConstructor) {
       let win = e.target.defaultView;
       let tabEl = win.gBrowser.tabContainer.childNodes[0];
       let tabBrowser = win.gBrowser.getBrowserForTab(tabEl);
-      tabBrowser.addEventListener("load", function(e) {
-        tabBrowser.removeEventListener("load", arguments.callee, true);
+      tabBrowser.addEventListener("load", function xyz(e) {
+        tabBrowser.removeEventListener("load", xyz, true);
         let tab = tabConstructor(tabEl);
         require("errors").catchAndLog(function(e) options.onOpen(e))(tab);
       }, true);
@@ -565,10 +565,10 @@ function openURLInNewTab(options, window, tabConstructor) {
     window.gBrowser.pinTab(tabEl);
   if (options.onOpen) {
     let tabBrowser = window.gBrowser.getBrowserForTab(tabEl);
-    tabBrowser.addEventListener("load", function(e) {
+    tabBrowser.addEventListener("load", function xyz(e) {
       // remove event handler from addTab - don't want to be notified
       // for subsequent loads in same tab.
-      tabBrowser.removeEventListener("load", arguments.callee, true);
+      tabBrowser.removeEventListener("load", xyz, true);
       let tab = tabConstructor(tabEl);
       require("timer").setTimeout(function() {
         require("errors").catchAndLog(function(tab) options.onOpen(tab))(tab);

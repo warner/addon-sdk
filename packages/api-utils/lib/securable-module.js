@@ -351,6 +351,7 @@
          sandbox.evaluate("module.id = '" + path + "';");
          var preeval_exports = sandbox.getProperty("exports");
          self.modules[path] = sandbox.getProperty("exports");
+         moduleContents.contents = '"use strict";' + moduleContents.contents;
          sandbox.evaluate(moduleContents);
          var posteval_exports = sandbox.getProperty("module").exports;
          if (posteval_exports !== preeval_exports) {

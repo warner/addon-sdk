@@ -646,8 +646,8 @@ exports.testWidgetMove = function testWidgetMove(test) {
 // Helper for calling code at window close
 function closeBrowserWindow(window, callback) {
   require("timer").setTimeout(function() {
-    window.addEventListener("unload", function() {
-      window.removeEventListener("unload", arguments.callee, false);
+    window.addEventListener("unload", function xyz() {
+      window.removeEventListener("unload", xyz, false);
       callback();
     }, false);
     window.close();
