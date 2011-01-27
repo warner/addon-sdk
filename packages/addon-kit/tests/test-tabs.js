@@ -708,7 +708,11 @@ function openBrowserWindow(callback, url) {
                              "_blank", "chrome,all,dialog=no", urlString);
   
   if (callback) {
+<<<<<<< HEAD
     window.addEventListener("load", function onLoad(event) {
+=======
+    var onLoad = function onLoad(event) {
+>>>>>>> make modules strict-mode compliant
       if (event.target && event.target.defaultView == window) {
         window.removeEventListener("load", onLoad, true);
         let browsers = window.document.getElementsByTagName("tabbrowser");
@@ -718,7 +722,13 @@ function openBrowserWindow(callback, url) {
           }, 10);
         } catch (e) { console.exception(e); }
       }
+<<<<<<< HEAD
     }, true);
+=======
+    };
+
+    window.addEventListener("load", onLoad, true);
+>>>>>>> make modules strict-mode compliant
   }
 
   return window;

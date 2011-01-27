@@ -47,7 +47,7 @@ function openBrowserWindow(callback, url) {
   let window = ww.openWindow(null, "chrome://browser/content/browser.xul",
                              "_blank", "chrome,all,dialog=no", urlString);
   if (callback) {
-    function onLoad(event) {
+    var onLoad = function onLoad(event) {
       if (event.target && event.target.defaultView == window) {
         window.removeEventListener("load", onLoad, true);
         let browsers = window.document.getElementsByTagName("tabbrowser");
@@ -57,7 +57,7 @@ function openBrowserWindow(callback, url) {
           }, 10);
         } catch (e) { console.exception(e); }
       }
-    }
+    };
 
     window.addEventListener("load", onLoad, true);
   }
