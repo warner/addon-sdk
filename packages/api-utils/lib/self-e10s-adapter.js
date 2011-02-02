@@ -59,7 +59,7 @@ if (this.chrome) {
   let resourcePackages = packaging.options.resourcePackages;
   let id = packaging.jetpackID;
 
-  function caller(stack, levels) {
+  let caller = function caller(stack, levels) {
     var e = {
       stack: stack
     };
@@ -68,15 +68,15 @@ if (this.chrome) {
     let pkgName = resourcePackages[info.host];
     // pkgName is "my-package", suitable for lookup in options["packageData"]
     return pkgName;
-  }
+  };
 
-  function getURL(name, stack, level) {
+  let getURL = function getURL(name, stack, level) {
     let pkgName = caller(stack, level);
     // packageData[] = "resource://jetpack-JID-PKGNAME-data/"
     if (pkgName in packageData)
       return url.URL(name, packageData[pkgName]).toString();
     throw new Error("No data for package " + pkgName);
-  }
+  };
 
   exports.register = function(addon) {
     addon.registerCall("self:id", function(name) {
