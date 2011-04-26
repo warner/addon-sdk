@@ -116,6 +116,11 @@ parser_groups = (
                                        metavar=None,
                                        default=[],
                                        cmds=['run', 'xpi', 'test'])),
+        (("", "--npmdir",), dict(dest="npmdir", action="store",
+                                 help="NPM package directory ($NPMROOT/.npm)",
+                                 metavar=None,
+                                 default=None,
+                                 cmds=['run', 'xpi', 'test'])),
         (("", "--extra-packages",), dict(dest="extra_packages",
                                          help=("extra packages to include, "
                                                "comma-separated. Default is "
@@ -552,7 +557,9 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
             sys.exit(1)
 
     if not pkg_cfg:
-        pkg_cfg = packaging.build_config(env_root, target_cfg, options.packagepath)
+        pkg_cfg = packaging.build_config(env_root, target_cfg,
+                                         options.packagepath,
+                                         npmdir=options.npmdir)
 
     target = target_cfg.name
 

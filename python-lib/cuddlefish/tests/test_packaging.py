@@ -59,5 +59,18 @@ class PackagePath(unittest.TestCase):
         self.assertEqual(sorted(["jspath-one"]),
                          sorted(all_packages - base_packages))
 
+class NPMDir(unittest.TestCase):
+    def test_npmdir(self):
+        root_path = os.path.join(tests_path, 'static-files')
+        pkg_path = os.path.join(root_path, 'packages', 'minimal')
+        target_cfg = packaging.get_config_in_dir(pkg_path)
+        pkg_cfg = packaging.build_config(root_path, target_cfg)
+        base_packages = set(pkg_cfg.packages.keys())
+        npmdir = os.path.join(tests_path, 'npm-files')
+        pkg_cfg2 = packaging.build_config(root_path, target_cfg, npmdir=npmdir)
+        all_packages = set(pkg_cfg2.packages.keys())
+        self.assertEqual(sorted(["npm-one", "npm-two"]),
+                         sorted(all_packages - base_packages))
+
 if __name__ == "__main__":
     unittest.main()

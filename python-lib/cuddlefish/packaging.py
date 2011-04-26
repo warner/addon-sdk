@@ -174,7 +174,7 @@ def _is_same_file(a, b):
         return os.path.samefile(a, b)
     return a == b
 
-def build_config(root_dir, target_cfg, packagepath=[]):
+def build_config(root_dir, target_cfg, packagepath=[], npmdir=None):
     dirs_to_scan = []
 
     def add_packages_from_config(pkgconfig):
@@ -191,6 +191,15 @@ def build_config(root_dir, target_cfg, packagepath=[]):
 
     packages = Bunch({target_cfg.name: target_cfg})
 
+    def add_if_unique(pkgconfig, path):
+        if pkgconfig.name in packages:
+            otherpkg = packages[pkgconfig.name]
+            if not _is_same_file(otherpkg.root_dir, path):
+                raise DuplicatePackageError(path, otherpkg.root_dir)
+        else:
+            packages[pkgconfig.name] = pkgconfig
+            add_packages_from_config(pkgconfig)
+
     while dirs_to_scan:
         packages_dir = dirs_to_scan.pop()
         package_paths = [os.path.join(packages_dir, dirname)
@@ -201,13 +210,14 @@ def build_config(root_dir, target_cfg, packagepath=[]):
 
         for path in package_paths:
             pkgconfig = get_config_in_dir(path)
-            if pkgconfig.name in packages:
-                otherpkg = packages[pkgconfig.name]
-                if not _is_same_file(otherpkg.root_dir, path):
-                    raise DuplicatePackageError(path, otherpkg.root_dir)
-            else:
-                packages[pkgconfig.name] = pkgconfig
-                add_packages_from_config(pkgconfig)
+            add_if_unique(pkgconfig, path)
+
+    if npmdir:
+        for name in os.listdir(npmdir):
+            path = os.path.join(npmdir, name, "active", "package")
+            if os.path.exists(os.path.join(path, "package.json")):
+                pkgconfig = get_config_in_dir(path)
+                add_if_unique(pkgconfig, path)
 
     return Bunch(packages=packages)
 
