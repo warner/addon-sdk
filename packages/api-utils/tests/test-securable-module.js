@@ -6,14 +6,16 @@ var beetFs = {
   resolveModule: function(root, path) {
     if (path == "beets")
       return path;
+    return null;
   },
   getFile: function(path) {
-    return {contents: ('print("hi from ' + path + '");' +
+    return {filename: "beets",
+            contents: ('print("hi from ' + path + '");' +
                        ' exports.beets = 5;')};
   }
 };
 
-FakeCompositeFileSystem = function FakeCompositeFileSystem(fses) {
+var FakeCompositeFileSystem = function FakeCompositeFileSystem(fses) {
   this.fses = fses;
   this._pathMap = {};
 };
@@ -356,7 +358,7 @@ exports.testGetModuleExports = function (test) {
 
 exports.testModifyModuleSandbox = function (test) {
   var sm = require("securable-module");
-  var out;
+  var out = "nope";
 
   function modifyModuleSandbox(sandbox, options) {
     sandbox.defineProperty("print", function() { out = options.filename; });
