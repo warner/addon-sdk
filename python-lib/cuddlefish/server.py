@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import threading
 import socket
@@ -279,8 +280,10 @@ def maybe_open_webpage(host=DEFAULT_HOST, port=DEFAULT_PORT):
     url = get_url(host, port)
     if _idle_event.isSet():
         print "Web browser appears to be viewing %s." % url
+        sys.stdout.flush()
     else:
         print "Opening web browser to %s." % url
+        sys.stdout.flush()
         webbrowser.open(url)
 
 def start_daemonic(httpd, host=DEFAULT_HOST, port=DEFAULT_PORT):
@@ -443,8 +446,6 @@ def run_app(harness_root_dir, harness_options,
     return 0
 
 if __name__ == '__main__':
-    import sys
-
     env_root=os.environ['CUDDLEFISH_ROOT']
 
     if len(sys.argv) > 1:
