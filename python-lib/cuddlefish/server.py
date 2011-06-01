@@ -311,6 +311,16 @@ def start(env_root=None, host=DEFAULT_HOST, port=DEFAULT_PORT,
     except KeyboardInterrupt:
         print "Ctrl-C received, exiting."
 
+def write_to(fn, contents, mode=""):
+    f = open(fn, "w"+mode)
+    f.write(contents)
+    f.close()
+def read_from(fn, mode=""):
+    f = open(fn, "r"+mode)
+    contents = f.read()
+    f.close()
+    return contents
+
 def generate_static_docs(env_root, tgz_filename, base_url = ''):
     web_docs = webdocs.WebDocs(env_root, base_url)
     server = Server(env_root, web_docs,
@@ -337,7 +347,7 @@ def generate_static_docs(env_root, tgz_filename, base_url = ''):
     # starting with the (generated) index file
     index = json.dumps(packaging.build_pkg_index(pkg_cfg))
     index_path = os.path.join(staging_dir, "packages", 'index.json')
-    open(index_path, 'w').write(index)
+    write_to(index_path, index)
 
     # and every doc-like thing in the package
     for pkg_name, pkg in pkg_cfg['packages'].items():
@@ -355,8 +365,8 @@ def generate_static_docs(env_root, tgz_filename, base_url = ''):
 
         # create the package page
         package_doc_html = web_docs.create_package_page(src_dir)
-        open(os.path.join(dest_dir, pkg_name + ".html"), "w")\
-            .write(package_doc_html)
+        write_to(os.path.join(dest_dir, pkg_name + ".html"),
+                 package_doc_html)
 
         docs_src_dir = os.path.join(src_dir, "doc")
         docs_dest_dir = os.path.join(dest_dir, "doc")
@@ -380,16 +390,16 @@ def generate_static_docs(env_root, tgz_filename, base_url = ''):
                 shutil.copyfile(src_path, dest_path)
                 if filename.endswith(".md"):
                     # parse and JSONify the API docs
-                    docs_md = open(src_path, 'r').read()
+                    docs_md = read_from(src_path)
                     docs_parsed = list(apiparser.parse_hunks(docs_md))
                     docs_json = json.dumps(docs_parsed)
-                    open(dest_path + ".json", "w").write(docs_json)
+                    write_to(dest_path + ".json", docs_json)
                     # write the HTML div files
                     docs_div = apirenderer.json_to_div(docs_parsed, src_path)
-                    open(dest_path + ".div", "w").write(docs_div)
+                    write_to(dest_path + ".div", docs_div)
                     # write the standalone HTML files
                     docs_html = web_docs.create_module_page(src_path)
-                    open(dest_path[:-3] + ".html", "w").write(docs_html)
+                    write_to(dest_path[:-3] + ".html", docs_html)
 
     dev_guide_src = os.path.join(server.root, 'md', 'dev-guide')
     dev_guide_dest = os.path.join(staging_dir, 'dev-guide')
@@ -410,7 +420,7 @@ def generate_static_docs(env_root, tgz_filename, base_url = ''):
             if filename.endswith(".md"):
                 # write the standalone HTML files
                 docs_html = web_docs.create_guide_page(src_path)
-                open(dest_path[:-3] + ".html", "w").write(docs_html)
+                write_to(dest_path[:-3] + ".html", docs_html)
 
     # make /md/dev-guide/welcome.html the top level index file
     shutil.copy(os.path.join(dev_guide_dest, 'welcome.html'), \
