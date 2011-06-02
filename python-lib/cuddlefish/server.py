@@ -321,6 +321,50 @@ def read_from(fn, mode=""):
     f.close()
     return contents
 
+import sys, stat
+def rmtree(path, ignore_errors=False, onerror=None):
+    # instrumented copy of shutil.rmtree
+    if ignore_errors:
+        def onerror(*args):
+            pass
+    elif onerror is None:
+        def onerror(*args):
+            raise
+    try:
+        if os.path.islink(path):
+            # symlinks to directories are forbidden, see bug #1669
+            raise OSError("Cannot call rmtree on a symbolic link")
+    except OSError:
+        onerror(os.path.islink, path, sys.exc_info())
+        # can't continue even if onerror hook returns
+        return
+    names = []
+    try:
+        names = os.listdir(path)
+    except os.error, err:
+        onerror(os.listdir, path, sys.exc_info())
+    for name in names:
+        fullname = os.path.join(path, name)
+        try:
+            mode = os.lstat(fullname).st_mode
+        except os.error:
+            mode = 0
+        if stat.S_ISDIR(mode):
+            rmtree(fullname, ignore_errors, onerror)
+        else:
+            try:
+                os.remove(fullname)
+            except os.error, err:
+                print "ERROR IN REMOVE", fullname
+                onerror(os.remove, fullname, sys.exc_info())
+    try:
+        os.rmdir(path)
+    except os.error:
+        print "ERROR IN RMDIR", path
+        print "NAMES", names
+        print "NOW", os.listdir(path)
+        onerror(os.rmdir, path, sys.exc_info())
+
 def generate_static_docs(env_root, tgz_filename, base_url = ''):
     web_docs = webdocs.WebDocs(env_root, base_url)
     server = Server(env_root, web_docs,
@@ -328,7 +372,7 @@ def generate_static_docs(env_root, tgz_filename, base_url = ''):
                     expose_privileged_api=False)
     staging_dir = os.path.join(env_root, "addon-sdk-docs")
     if os.path.exists(staging_dir):
-        shutil.rmtree(staging_dir)
+        rmtree(staging_dir)
 
     # first, copy static-files
     shutil.copytree(server.root, staging_dir)
@@ -431,7 +475,7 @@ def generate_static_docs(env_root, tgz_filename, base_url = ''):
     tgz = tarfile.open(tgz_filename, 'w:gz')
     tgz.add('addon-sdk-docs', 'addon-sdk-docs')
     tgz.close()
-    shutil.rmtree(staging_dir)
+    rmtree(staging_dir)
 
 def run_app(harness_root_dir, harness_options,
             app_type, binary=None, profiledir=None, verbose=False,

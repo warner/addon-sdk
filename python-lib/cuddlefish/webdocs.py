@@ -172,7 +172,7 @@ class WebDocs(object):
     def _create_package_detail(self, package_name):
         package_json = self.packages_json.get(package_name, None)
         if not package_json:
-            raise IOError(errno.ENOENT, 'Package not found')
+            raise IOError(errno.ENOENT, 'Package "%s" not found' % package_name)
         # pieces of the package detail: 1) title, 2) table, 3) description
         package_title = tag_wrap(package_name, 'h1')
         table = self._create_package_detail_table(package_json)
