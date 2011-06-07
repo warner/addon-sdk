@@ -39,7 +39,7 @@ def create_jid():
     # the one-in-a-million margin to get 80 bits)
 
     # if length were no issue, we'd prefer to use this:
-    h = os.urandom(80/8)
+    h = os.urandom(80//8)
     s = base64.b64encode(h, "AB").strip("=")
     jid = "jid1-" + s
     return jid

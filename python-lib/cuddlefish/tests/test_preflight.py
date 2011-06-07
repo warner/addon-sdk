@@ -21,7 +21,7 @@ class Util(unittest.TestCase):
 
     def test_base62(self):
         for i in range(1000):
-            h = hashlib.sha1(str(i)).digest()
+            h = hashlib.sha1(str(i).encode("ascii")).digest()
             s1 = base64.b64encode(h, "AB").strip("=")
             s2 = base64.b64encode(h).strip("=").replace("+","A").replace("/","B")
             self.failUnlessEqual(s1, s2)

@@ -13,7 +13,7 @@ def datafile_zipname(packagename, datapath):
     return "%s-data/%s" % (packagename, datapath)
 
 def to_json(o):
-    return json.dumps(o, indent=1).encode("utf-8")+"\n"
+    return json.dumps(o, indent=1).encode("utf-8")+b"\n"
 
 class ModuleNotFoundError(Exception):
     def __init__(self, *args):
