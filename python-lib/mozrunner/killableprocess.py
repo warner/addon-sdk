@@ -53,7 +53,6 @@ import os
 import time
 import datetime
 import types
-import exceptions
 
 try:
     from subprocess import CalledProcessError
@@ -277,7 +276,7 @@ class Popen(subprocess.Popen):
                             os.killpg(self.pid, signal.SIG_DFL)
                             # count is increased by 500ms for every 0.5s of sleep
                             time.sleep(.5); count += 500
-                    except exceptions.OSError:
+                    except OSError:
                         return self.returncode
                         
             if timeout is None:
