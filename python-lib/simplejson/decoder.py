@@ -3,6 +3,7 @@ Implementation of JSONDecoder
 """
 import re
 import sys
+import base64
 
 from simplejson.scanner import Scanner, pattern
 try:
@@ -15,7 +16,7 @@ FLAGS = re.VERBOSE | re.MULTILINE | re.DOTALL
 def _floatconstants():
     import struct
     import sys
-    _BYTES = u'7FF80000000000007FF0000000000000'.decode('hex')
+    _BYTES = base64.b16decode('7FF80000000000007FF0000000000000')
     if sys.byteorder != 'big':
         _BYTES = _BYTES[:8][::-1] + _BYTES[8:][::-1]
     nan, inf = struct.unpack('dd', _BYTES)
