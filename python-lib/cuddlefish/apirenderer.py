@@ -272,7 +272,7 @@ def json_to_div(json, markdown_filename):
     text += render_api_reference(api_docs)
     text = tag_wrap_id(text, MODULE_API_DOCS_CLASS, \
                        module_name + MODULE_API_DOCS_ID)
-    return text.encode('utf8')
+    return text
 
 # take the JSON output of apiparser
 # return standalone HTML containing the rendered component

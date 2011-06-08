@@ -73,7 +73,7 @@ class WebDocs(object):
     def create_guide_page(self, path):
         path, ext = os.path.splitext(path)
         md_path = path + '.md'
-        md_content = unicode(open(md_path, 'rb').read(), 'utf8')
+        md_content = open(md_path, 'rb').read().decode("utf-8")
         guide_content = markdown.markdown(md_content)
         return self._create_page(guide_content)
 
@@ -92,7 +92,7 @@ class WebDocs(object):
     def _create_page(self, page_content):
         page = self._insert_title(self.base_page, page_content)
         page = insert_after(page, CONTENT_ID, page_content)
-        return page.encode('utf8')
+        return page
 
     def _create_module_list(self, package_json):
         package_name = package_json['name']
@@ -128,7 +128,7 @@ class WebDocs(object):
         return packaging.build_pkg_index(pkg_cfg)
 
     def _create_base_page(self, root, base_url):
-        base_page = unicode(open(root + INDEX_PAGE, 'rb').read(), 'utf8')
+        base_page = open(root + INDEX_PAGE, 'rb').read().decode('utf8')
         base_tag = 'href="' + base_url + '"'
         base_page = insert_after(base_page, BASE_URL_INSERTION_POINT, base_tag)
         high_level_summaries = \

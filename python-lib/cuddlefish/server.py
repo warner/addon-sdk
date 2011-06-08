@@ -136,17 +136,17 @@ class Server(object):
             if parts[0] == 'dev-guide':
                 path = os.path.join(self.env_root, \
                                     'static-files', 'md', *parts)
-                response = self.web_docs.create_guide_page(path)
+                response = self.web_docs.create_guide_page(path).encode("utf-8")
             elif parts[0] == 'packages':
                  if len(parts) > 1 and parts[1] == 'index.json':
                      mimetype = 'text/plain'
                      response = json.dumps(self.web_docs.packages_json)
                  elif self._is_package_file_request(parts):
                      path = os.path.join(self.env_root, *parts)
-                     response = self.web_docs.create_package_page(path)
+                     response = self.web_docs.create_package_page(path).encode("utf-8")
                  else:
                      path = os.path.join(self.env_root, *parts)
-                     response = self.web_docs.create_module_page(path)
+                     response = self.web_docs.create_module_page(path).encode("utf-8")
             else:
                 path = os.path.join(self.root, *parts)
                 url = urllib.pathname2url(path)
@@ -354,9 +354,8 @@ def generate_static_docs(env_root, tgz_filename, base_url = ''):
                             os.path.join(dest_dir, "README.md"))
 
         # create the package page
-        package_doc_html = web_docs.create_package_page(src_dir)
-        open(os.path.join(dest_dir, pkg_name + ".html"), "w")\
-            .write(package_doc_html)
+        package_doc_html = web_docs.create_package_page(src_dir).encode("utf-8")
+        open(os.path.join(dest_dir, pkg_name + ".html"), "wb").write(package_doc_html)
 
         docs_src_dir = os.path.join(src_dir, "doc")
         docs_dest_dir = os.path.join(dest_dir, "doc")
@@ -380,16 +379,16 @@ def generate_static_docs(env_root, tgz_filename, base_url = ''):
                 shutil.copyfile(src_path, dest_path)
                 if filename.endswith(".md"):
                     # parse and JSONify the API docs
-                    docs_md = open(src_path, 'r').read()
+                    docs_md = open(src_path, 'rb').read().decode("utf-8")
                     docs_parsed = list(apiparser.parse_hunks(docs_md))
                     docs_json = json.dumps(docs_parsed)
-                    open(dest_path + ".json", "w").write(docs_json)
+                    open(dest_path + ".json", "wb").write(docs_json.encode("utf-8"))
                     # write the HTML div files
                     docs_div = apirenderer.json_to_div(docs_parsed, src_path)
-                    open(dest_path + ".div", "w").write(docs_div)
+                    open(dest_path + ".div", "wb").write(docs_div.encode("utf-8"))
                     # write the standalone HTML files
                     docs_html = web_docs.create_module_page(src_path)
-                    open(dest_path[:-3] + ".html", "w").write(docs_html)
+                    open(dest_path[:-3] + ".html", "wb").write(docs_html.encode("utf-8"))
 
     dev_guide_src = os.path.join(server.root, 'md', 'dev-guide')
     dev_guide_dest = os.path.join(staging_dir, 'dev-guide')
@@ -409,8 +408,8 @@ def generate_static_docs(env_root, tgz_filename, base_url = ''):
             dest_path = os.path.join(dev_guide_dest, relpath, filename)
             if filename.endswith(".md"):
                 # write the standalone HTML files
-                docs_html = web_docs.create_guide_page(src_path)
-                open(dest_path[:-3] + ".html", "w").write(docs_html)
+                docs_html = web_docs.create_guide_page(src_path).encode("utf-8")
+                open(dest_path[:-3] + ".html", "wb").write(docs_html)
 
     # make /md/dev-guide/welcome.html the top level index file
     shutil.copy(os.path.join(dev_guide_dest, 'welcome.html'), \
