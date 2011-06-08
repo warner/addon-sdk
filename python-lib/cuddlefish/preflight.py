@@ -1,6 +1,7 @@
 import os, sys
 import base64
 import simplejson as json
+def b(s): return s.encode("ascii") # py3 compat, to get bytes from literal
 
 def create_jid():
     """Return 'jid1-XYZ', where 'XYZ' is a randomly-generated string. (in the
@@ -40,8 +41,8 @@ def create_jid():
 
     # if length were no issue, we'd prefer to use this:
     h = os.urandom(80//8)
-    s = base64.b64encode(h, "AB").strip("=")
-    jid = "jid1-" + s
+    s = base64.b64encode(h, b("AB")).strip(b("="))
+    jid = "jid1-" + str(s)
     return jid
 
 def preflight_config(target_cfg, filename, stderr=sys.stderr):

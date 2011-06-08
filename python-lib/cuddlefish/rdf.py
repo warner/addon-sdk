@@ -7,6 +7,9 @@ EM_NS = "http://www.mozilla.org/2004/em-rdf#"
 
 class RDF(object):
     def __str__(self):
+        raise RuntimeError("automatic stringification was removed, use to_bytes")
+
+    def to_bytes(self):
         # real files have an .encoding attribute and use it when you
         # write() unicode into them: they read()/write() unicode and
         # put encoded bytes in the backend file. StringIO objects

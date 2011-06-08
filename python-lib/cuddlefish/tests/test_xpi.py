@@ -12,7 +12,9 @@ from test_linker import up
 xpi_template_path = os.path.join(test_packaging.static_files_path,
                                  'xpi-template')
 
-fake_manifest = '<RDF><!-- Extension metadata is here. --></RDF>'
+class FakeManifest:
+    def to_bytes(self):
+        return '<RDF><!-- Extension metadata is here. --></RDF>'.encode("ascii")
 
 class Bug588119Tests(unittest.TestCase):
     def makexpi(self, pkg_name):
@@ -113,7 +115,7 @@ class SmallXPI(unittest.TestCase):
         basedir = self.make_basedir()
         xpi_name = os.path.join(basedir, "contents.xpi")
         xpi.build_xpi(template_root_dir=xpi_template_path,
-                      manifest=fake_manifest,
+                      manifest=FakeManifest(),
                       xpi_name=xpi_name,
                       harness_options=options,
                       limit_to=used_files)
@@ -200,7 +202,7 @@ def create_xpi(xpiname, pkg_name='aardvark', dirname='static-files'):
     options = {'main': configs.target_cfg.main}
     options.update(configs.build)
     xpi.build_xpi(template_root_dir=xpi_template_path,
-                  manifest=fake_manifest,
+                  manifest=FakeManifest(),
                   xpi_name=xpiname,
                   harness_options=options)
 

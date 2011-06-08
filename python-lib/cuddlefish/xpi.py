@@ -7,7 +7,7 @@ def build_xpi(template_root_dir, manifest, xpi_name,
               harness_options, limit_to=None):
     zf = zipfile.ZipFile(xpi_name, "w", zipfile.ZIP_DEFLATED)
 
-    open('.install.rdf', 'wb').write(str(manifest).encode("utf-8"))
+    open('.install.rdf', 'wb').write(manifest.to_bytes())
     zf.write('.install.rdf', 'install.rdf')
     os.remove('.install.rdf')
 
