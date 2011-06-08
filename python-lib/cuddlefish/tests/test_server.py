@@ -5,6 +5,8 @@ from cuddlefish import webdocs
 from cuddlefish import server
 from cuddlefish.tests import env_root
 
+def b(s): return s.encode("ascii") # py3 compat, to get bytes from literal
+
 class ServerTests(unittest.TestCase):
     def test_generate_static_docs_does_not_smoke(self):
         filename = 'testdocs.tgz'
@@ -27,7 +29,7 @@ class UnprivilegedServerTests(unittest.TestCase):
                    'REQUEST_METHOD': method}
 
         responses = [string for string in app(environ, start_response)]
-        return ''.join(responses)
+        return b('').join(responses)
 
     def test_privileged_api_returns_404(self):
         self.assertEqual(self.request('/api/blah'),

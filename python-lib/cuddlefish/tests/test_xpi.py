@@ -20,7 +20,7 @@ class Bug588119Tests(unittest.TestCase):
         create_xpi(self.xpiname, pkg_name, 'bug-588119-files')
         self.xpi = zipfile.ZipFile(self.xpiname, 'r')
         options = self.xpi.read('harness-options.json')
-        self.xpi_harness_options = json.loads(options)
+        self.xpi_harness_options = json.loads(options.decode("utf-8"))
 
     def setUp(self):
         self.xpiname = None

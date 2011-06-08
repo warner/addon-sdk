@@ -7,6 +7,8 @@ import base64
 from cuddlefish import preflight
 from StringIO import StringIO
 
+def b(s): return s.encode("ascii") # py3 compat, to get bytes from literal
+
 class Util(unittest.TestCase):
     def get_basedir(self):
         return os.path.join(".test_tmp", self.id())
@@ -22,8 +24,12 @@ class Util(unittest.TestCase):
     def test_base62(self):
         for i in range(1000):
             h = hashlib.sha1(str(i).encode("ascii")).digest()
-            s1 = base64.b64encode(h, "AB").strip("=")
-            s2 = base64.b64encode(h).strip("=").replace("+","A").replace("/","B")
+            s1 = (base64.b64encode(h, b("AB"))
+                  .strip(b("=")))
+            s2 = (base64.b64encode(h)
+                  .strip(b("="))
+                  .replace(b("+"),b("A"))
+                  .replace(b("/"),b("B")))
             self.failUnlessEqual(s1, s2)
 
     def write(self, config):
