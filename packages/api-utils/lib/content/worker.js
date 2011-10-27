@@ -43,7 +43,6 @@ const { EventEmitter, EventEmitterTrait } = require('../events');
 const { Ci, Cu, Cc } = require('chrome');
 const timer = require('../timer');
 const { toFilename } = require('../url');
-const file = require('../file');
 const unload = require('../unload');
 const observers = require('../observer-service');
 const { Cortex } = require('../cortex');
@@ -415,8 +414,7 @@ const WorkerGlobalScope = AsyncEventEmitter.compose({
     let urls = Array.slice(arguments, 0);
     for each (let contentScriptFile in urls) {
       try {
-        let filename = toFilename(contentScriptFile);
-        this._evaluate(file.read(filename), filename);
+        scriptLoader.loadSubScript(contentScriptFile, this._sandbox);
       }
       catch(e) {
         this._addonWorker._asyncEmit('error', e)
