@@ -11,10 +11,10 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozrunner.
+# The Original Code is mozprofile.
 #
 # The Initial Developer of the Original Code is
-#   The Mozilla Foundation.
+#  The Mozilla Foundation.
 # Portions created by the Initial Developer are Copyright (C) 2008-2009
 # the Initial Developer. All Rights Reserved.
 #
@@ -22,6 +22,8 @@
 #  Mikeal Rogers <mikeal.rogers@gmail.com>
 #  Clint Talbert <ctalbert@mozilla.com>
 #  Henrik Skupin <hskupin@mozilla.com>
+#  Jeff Hammel <jhammel@mozilla.com>
+#  Andrew Halberstadt <halbersa@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,5 +38,6 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-
-from runner import *
+from profile import *
+from addons import *
+from cli import *

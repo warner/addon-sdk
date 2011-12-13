@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -11,10 +13,10 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozrunner.
+# The Original Code is Mozilla Corporation Code.
 #
 # The Initial Developer of the Original Code is
-#   The Mozilla Foundation.
+# Mikeal Rogers.
 # Portions created by the Initial Developer are Copyright (C) 2008-2009
 # the Initial Developer. All Rights Reserved.
 #
@@ -37,4 +39,28 @@
 #
 # ***** END LICENSE BLOCK *****
 
-from runner import *
+import mozinfo
+import subprocess
+
+def get_pids(name, minimun_pid=0):
+  """Get all the pids matching name, exclude any pids below minimum_pid."""
+  
+  if mozinfo.isWin:
+      # use the windows-specific implementation
+      import wpk
+      pids = wpk.get_pids(name)
+  else:
+      process = subprocess.Popen(['ps', 'ax'], stdout=subprocess.PIPE)
+      output, _ = process.communicate()
+      data = output.splitlines()
+      pids = [int(line.split()[0]) for line in data if line.find(name) is not -1]
+
+  return [m for m in pids if m > minimun_pid]
+
+if __name__ == '__main__':
+  import sys
+  pids = set()
+  for i in sys.argv[1:]:
+      pids.update(get_pids(i))
+  for i in sorted(pids):
+      print i

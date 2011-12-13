@@ -1,3 +1,40 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla Corporation Code.
+#
+# The Initial Developer of the Original Code is
+# Mikeal Rogers.
+# Portions created by the Initial Developer are Copyright (C) 2008-2009
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#  Mikeal Rogers <mikeal.rogers@gmail.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
 from ctypes import c_void_p, POINTER, sizeof, Structure, windll, WinError, WINFUNCTYPE, addressof, c_size_t, c_ulong
 from ctypes.wintypes import BOOL, BYTE, DWORD, HANDLE, LARGE_INTEGER
 
@@ -43,6 +80,10 @@ class JOBOBJECT_BASIC_LIMIT_INFORMATION(Structure):
                 ('SchedulingClass', DWORD)
                 ]
 
+class JOBOBJECT_ASSOCIATE_COMPLETION_PORT(Structure):
+    _fields_ = [('CompletionKey', c_ulong),
+                ('CompletionPort', HANDLE)]
+
 # see http://msdn.microsoft.com/en-us/library/ms684156%28VS.85%29.aspx
 class JOBOBJECT_EXTENDED_LIMIT_INFORMATION(Structure):
     _fields_ = [('BasicLimitInformation', JOBOBJECT_BASIC_LIMIT_INFORMATION),
@@ -52,19 +93,20 @@ class JOBOBJECT_EXTENDED_LIMIT_INFORMATION(Structure):
                 ('PeakProcessMemoryUsed', SIZE_T),
                 ('PeakJobMemoryUsed', SIZE_T)]
 
-# XXX Magical numbers like 8 should be documented
+# These numbers below come from:
+# http://msdn.microsoft.com/en-us/library/ms686216%28v=vs.85%29.aspx
+JobObjectAssociateCompletionPortInformation = 7
 JobObjectBasicAndIoAccountingInformation = 8
-
-# ...like magical number 9 comes from
-# http://community.flexerasoftware.com/archive/index.php?t-181670.html
-# I wish I had a more canonical source
 JobObjectExtendedLimitInformation = 9
 
 class JobObjectInfo(object):
     mapping = { 'JobObjectBasicAndIoAccountingInformation': 8,
-                'JobObjectExtendedLimitInformation': 9
+                'JobObjectExtendedLimitInformation': 9,
+                'JobObjectAssociateCompletionPortInformation': 7
                 }
-    structures = { 8: JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION,
+    structures = {
+                   7: JOBOBJECT_ASSOCIATE_COMPLETION_PORT,
+                   8: JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION,
                    9: JOBOBJECT_EXTENDED_LIMIT_INFORMATION
                    }
     def __init__(self, _class):
@@ -129,34 +171,3 @@ def QueryInformationJobObject(hJob, JobObjectInfoClass):
     if not result:
         raise WinError()
     return SubscriptableReadOnlyStruct(jobinfo.info)
-
-def test_qijo():
-    from killableprocess import Popen
-
-    popen = Popen('c:\\windows\\notepad.exe')
-
-    try:
-        result = QueryInformationJobObject(0, 8)
-        raise AssertionError('throw should occur')
-    except WindowsError, e:
-        pass
-
-    try:
-        result = QueryInformationJobObject(0, 1)
-        raise AssertionError('throw should occur')
-    except NotImplementedError, e:
-        pass
-
-    result = QueryInformationJobObject(popen._job, 8)
-    if result['BasicInfo']['ActiveProcesses'] != 1:
-        raise AssertionError('expected ActiveProcesses to be 1')
-    popen.kill()
-
-    result = QueryInformationJobObject(popen._job, 8)
-    if result.BasicInfo.ActiveProcesses != 0:
-        raise AssertionError('expected ActiveProcesses to be 0')
-
-if __name__ == '__main__':
-    print "testing."
-    test_qijo()
-    print "success!"
