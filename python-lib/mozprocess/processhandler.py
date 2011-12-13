@@ -521,8 +521,8 @@ falling back to not using job objects for managing child processes"""
         self.didTimeout = False
         self.startTime = datetime.now()
         self.proc = self.Process(self.cmd,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT,
+                                 #stdout=subprocess.PIPE,
+                                 #stderr=subprocess.STDOUT,
                                  cwd=self.cwd,
                                  env=self.env,
                                  ignore_children = self._ignore_children,
