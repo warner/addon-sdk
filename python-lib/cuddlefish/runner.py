@@ -7,7 +7,8 @@ import shlex
 import subprocess
 import re
 
-import mozrunner
+from mozrunner import Runner, FirefoxRunner, ThunderbirdRunner
+from mozprofile import Profile, FirefoxProfile, ThunderbirdProfile
 from cuddlefish.prefs import DEFAULT_COMMON_PREFS
 from cuddlefish.prefs import DEFAULT_FIREFOX_PREFS
 from cuddlefish.prefs import DEFAULT_THUNDERBIRD_PREFS
@@ -86,11 +87,11 @@ def check_output(*popenargs, **kwargs):
     return output
 
 
-class FennecProfile(mozrunner.Profile):
+class FennecProfile(Profile):
     preferences = {}
     names = ['fennec']
 
-class FennecRunner(mozrunner.Runner):
+class FennecRunner(Runner):
     profile_class = FennecProfile
 
     names = ['fennec']
@@ -104,18 +105,18 @@ class FennecRunner(mozrunner.Runner):
 
         self.__real_binary = binary
 
-        mozrunner.Runner.__init__(self, **kwargs)
+        Runner.__init__(self, **kwargs)
 
     def find_binary(self):
         if not self.__real_binary:
             if sys.platform == 'darwin':
                 if os.path.exists(self.__DARWIN_PATH):
                     return self.__DARWIN_PATH
-            self.__real_binary = mozrunner.Runner.find_binary(self)
+            self.__real_binary = Runner.find_binary(self)
         return self.__real_binary
 
 
-class RemoteFennecRunner(mozrunner.Runner):
+class RemoteFennecRunner(Runner):
     profile_class = FennecProfile
 
     names = ['fennec']
@@ -253,18 +254,18 @@ class RemoteFennecRunner(mozrunner.Runner):
         return names
 
 
-class XulrunnerAppProfile(mozrunner.Profile):
+class XulrunnerAppProfile(Profile):
     preferences = {}
     names = []
 
-class XulrunnerAppRunner(mozrunner.Runner):
+class XulrunnerAppRunner(Runner):
     """
     Runner for any XULRunner app. Can use a Firefox binary in XULRunner
     mode to execute the app, or can use XULRunner itself. Expects the
     app's application.ini to be passed in as one of the items in
     'cmdargs' in the constructor.
 
-    This class relies a lot on the particulars of mozrunner.Runner's
+    This class relies a lot on the particulars of Runner's
     implementation, and does some unfortunate acrobatics to get around
     some of the class' limitations/assumptions.
     """
@@ -291,7 +292,7 @@ class XulrunnerAppRunner(mozrunner.Runner):
         self.__app_ini = None
         self.__real_binary = binary
 
-        mozrunner.Runner.__init__(self, **kwargs)
+        Runner.__init__(self, **kwargs)
 
         # See if we're using a genuine xulrunner-bin from the XULRunner SDK,
         # or if we're being asked to use Firefox in XULRunner mode.
@@ -356,7 +357,7 @@ class XulrunnerAppRunner(mozrunner.Runner):
             self.__real_binary = self.__find_xulrunner_binary()
             if not self.__real_binary:
                 dummy_profile = {}
-                runner = mozrunner.FirefoxRunner(profile=dummy_profile)
+                runner = FirefoxRunner(profile=dummy_profile)
                 self.__real_binary = runner.find_binary()
                 self.names = runner.names
         return self.__real_binary
@@ -394,13 +395,13 @@ def run_app(harness_root_dir, manifest_rdf, harness_options,
         runner_class = XulrunnerAppRunner
         cmdargs.append(os.path.join(harness_root_dir, 'application.ini'))
     elif app_type == "firefox":
-        profile_class = mozrunner.FirefoxProfile
+        profile_class = FirefoxProfile
         preferences.update(DEFAULT_FIREFOX_PREFS)
-        runner_class = mozrunner.FirefoxRunner
+        runner_class = FirefoxRunner
     elif app_type == "thunderbird":
-        profile_class = mozrunner.ThunderbirdProfile
+        profile_class = ThunderbirdProfile
         preferences.update(DEFAULT_THUNDERBIRD_PREFS)
-        runner_class = mozrunner.ThunderbirdRunner
+        runner_class = ThunderbirdRunner
     else:
         raise ValueError("Unknown app: %s" % app_type)
     if sys.platform == 'darwin' and app_type != 'xulrunner':
