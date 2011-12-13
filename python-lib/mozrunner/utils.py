@@ -53,6 +53,8 @@ import sys
 
 ### python package method metadata by introspection
 try:
+    # bypass this whole thing
+    raise ImportError("this mozrunner does not live in an egg")
     import pkg_resources
     def get_metadata_from_egg(module):
         ret = {}
