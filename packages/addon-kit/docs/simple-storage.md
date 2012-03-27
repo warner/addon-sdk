@@ -39,15 +39,6 @@ Because `cfx run` by default uses a fresh profile each time it runs,
 simple storage won't work with add-ons executed using `cfx run` - that
 is, stored data will not persist from one run to the next.
 
-The easiest solution to this problem is to use the
-[`--profiledir` option to `cfx run`](dev-guide/cfx-tool.html#profiledir).
-
-If you use this method, you must end your debugging session by
-quitting Firefox normally, not by cancelling the shell command.
-If you don't close Firefox normally, then simple storage will
-not be notified that the session is finished, and will not write
-your data to the backing store.
-
 Constructing Arrays
 -------------------
 Be careful to construct array objects conditionally in your code, or you may

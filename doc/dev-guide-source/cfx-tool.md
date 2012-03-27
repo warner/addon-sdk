@@ -83,13 +83,8 @@ using the `--binary` option, passing in the path to the application binary to
 run. The path may be specified as a full path or may be relative to the current
 directory. But note that the version must be 4.0b7 or later.
 
-`cfx run` runs the host application with a new
-[profile](http://support.mozilla.com/en-US/kb/profiles). You can specify an
-existing profile using the `--profiledir` option, and this gives you access to
-that profile's history, bookmarks, and other add-ons. This enables you to run
-your add-on alongside debuggers like [Firebug](http://getfirebug.com/).
-See <a href="dev-guide/cfx-tool.html#profiledir">
-"Using --profiledir"</a> for more information.
+`cfx run` runs the host application with a new ephemeral
+[profile](http://support.mozilla.com/en-US/kb/profiles).
 
 <table>
 <colgroup>
@@ -141,21 +136,6 @@ See <a href="dev-guide/cfx-tool.html#profiledir">
   <td>
     Pass a set of options by
     <a href="dev-guide/cfx-tool.html#configurations">referencing a named configuration</a>.
-  </td>
-</tr>
-
-<tr>
-  <td>
-    <code>-p PROFILEDIR, --profiledir=PROFILEDIR</code>
-  </td>
-  <td>
-    <p>Use an existing
-    <a href="http://support.mozilla.com/en-US/kb/profiles">profile</a>
-    located in PROFILEDIR. PROFILEDIR may be specified as
-    a full path or as a path relative to the current directory.</p>
-
-    <p>See <a href="dev-guide/cfx-tool.html#profiledir">
-    "Using --profiledir"</a> for more information.
   </td>
 </tr>
 
@@ -374,21 +354,6 @@ times.
   <td>
     Pass a set of options by
     <a href="dev-guide/cfx-tool.html#configurations">referencing a named configuration</a>.
-  </td>
-</tr>
-
-<tr>
-  <td>
-    <code>-p PROFILEDIR, --profiledir=PROFILEDIR</code>
-  </td>
-  <td>
-    <p>Use an existing
-    <a href="http://support.mozilla.com/en-US/kb/profiles">profile</a>
-    located in PROFILEDIR. PROFILEDIR may be specified as
-    a full path or as a path relative to the current directory.</p>
-
-    <p>See <a href="dev-guide/cfx-tool.html#profiledir">
-    "Using --profiledir"</a> for more information.
   </td>
 </tr>
 
@@ -793,30 +758,6 @@ This will test *everything*: the cfx tool, all available CommonJS packages,
 and all examples.
 
 This accepts the same options as `cfx test`.
-
-## <a name="profiledir">Using --profiledir</a> ##
-
-By default, `cfx run` and `cfx test` use a new profile each time they
-are executed. This means that any profile-specific data entered from
-one run of `cfx` will not, by default, be available in the next run.
-
-This includes, for example, any extra add-ons you installed, or your
-history, or any data stored using the
-[simple-storage](packages/addon-kit/simple-storage.html) API.
-
-To make `cfx` use a specific profile, pass the `--profiledir` option,
-specifying the path to the profile you wish to use.
-
-If you give `--profiledir` a path to a nonexistent profile, `cfx`
-will create a profile there for you. So you just have to make up
-a path and name the first time, and keep using it:
-
-<pre>
-cfx run --profile-dir="~/addon-dev/profiles/boogaloo"
-</pre>
-
-The path must contain at least one "/" (although you may specify
-just "./dir").
 
 ## <a name="configurations">Using Configurations</a> ##
 

@@ -61,13 +61,6 @@ parser_groups = (
                                       metavar=None,
                                       default=None,
                                       cmds=['xpi'])),
-        (("-p", "--profiledir",), dict(dest="profiledir",
-                                       help=("profile directory to pass to "
-                                             "app"),
-                                       metavar=None,
-                                       default=None,
-                                       cmds=['test', 'run', 'testex',
-                                             'testpkgs', 'testall'])),
         (("-b", "--binary",), dict(dest="binary",
                                    help="path to app binary",
                                    metavar=None,
@@ -759,10 +752,6 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
     else:
         from cuddlefish.runner import run_app
 
-        if options.profiledir:
-            options.profiledir = os.path.expanduser(options.profiledir)
-            options.profiledir = os.path.abspath(options.profiledir)
-
         if options.addons is not None:
             options.addons = options.addons.split(",")
 
@@ -772,7 +761,6 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
                              harness_options=harness_options,
                              app_type=options.app,
                              binary=options.binary,
-                             profiledir=options.profiledir,
                              verbose=options.verbose,
                              enforce_timeouts=enforce_timeouts,
                              logfile=options.logfile,

@@ -375,7 +375,7 @@ class XulrunnerAppRunner(mozrunner.Runner):
         return self.__real_binary
 
 def run_app(harness_root_dir, manifest_rdf, harness_options,
-            app_type, binary=None, profiledir=None, verbose=False,
+            app_type, binary=None, verbose=False,
             enforce_timeouts=False,
             logfile=None, addons=None, args=None, extra_environment={},
             norun=None,
@@ -513,9 +513,7 @@ def run_app(harness_root_dir, manifest_rdf, harness_options,
         addons.append(addon_dir)
 
     # the XPI file is copied into the profile here
-    profile = profile_class(addons=addons,
-                            profile=profiledir,
-                            preferences=preferences)
+    profile = profile_class(addons=addons, preferences=preferences)
 
     # Delete the temporary xpi file
     os.remove(xpi_path)
